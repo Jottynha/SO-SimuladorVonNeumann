@@ -9,6 +9,7 @@
 #include <string>
 #include <atomic>
 #include <cstdint>
+#include <vector>
 #include "memory/cache.hpp"
 #include "REGISTER_BANK.hpp" // necessidade de objeto completo dentro do PCB
 
@@ -30,8 +31,11 @@ struct MemWeights {
 struct PCB {
     int pid = 0;
     std::string name;
+    std::string program; // <--- ADICIONADO
     int quantum = 0;
-    int priority = 0;
+    int priority = 99; // Prioridade do processo (menor = mais prioritário)
+    size_t instruction_count = 0; // <--- ADICIONADO
+    size_t base_address = 0; // Endereço base do processo na memória
 
     State state = State::Ready;
     hw::REGISTER_BANK regBank;
@@ -55,7 +59,12 @@ struct PCB {
     std::atomic<uint64_t> cache_misses{0};
     std::atomic<uint64_t> io_cycles{1};
 
+    std::vector<std::string> execution_log; // Log de operações executadas
+
     MemWeights memWeights;
+
+    // Construtor padrão
+    PCB() : state(State::Ready), base_address(0), quantum(10), instruction_count(0) {}
 };
 
 // Contabilizar cache

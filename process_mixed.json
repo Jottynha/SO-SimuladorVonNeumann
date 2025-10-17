@@ -1,0 +1,7 @@
+{
+    "pid": 105,
+    "name": "Mixed_Process",
+    "program": "task_mixed.json",
+    "priority": 3,
+    "quantum": 8
+}

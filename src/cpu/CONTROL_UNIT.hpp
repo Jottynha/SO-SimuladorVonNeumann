@@ -67,13 +67,13 @@ struct Control_Unit {
 
     void Fetch(ControlContext &context);
     void Decode(hw::REGISTER_BANK &registers, Instruction_Data &data);
-    void Execute_Aritmetic_Operation(hw::REGISTER_BANK &registers, Instruction_Data &d);
+    void Execute_Aritmetic_Operation(ControlContext &context, Instruction_Data &data);
     void Execute_Operation(Instruction_Data &data, ControlContext &context);
     void Execute_Loop_Operation(hw::REGISTER_BANK &registers, Instruction_Data &d,
                                 int &counter, int &counterForEnd, bool &endProgram,
                                 MemoryManager &memManager, PCB &process);
     void Execute(Instruction_Data &data, ControlContext &context);
-    void Execute_Immediate_Operation(hw::REGISTER_BANK &registers, Instruction_Data &data);
+    void Execute_Immediate_Operation(ControlContext &context, Instruction_Data &data);
     void log_operation(const std::string &msg);
     void Memory_Acess(Instruction_Data &data, ControlContext &context);
     void Write_Back(Instruction_Data &data, ControlContext &context);

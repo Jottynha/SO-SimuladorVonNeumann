@@ -1,0 +1,16 @@
+{
+  "instructions": [
+    { "op": "LOAD", "reg": "R1", "addr": 10 },
+    { "op": "LOAD", "reg": "R2", "addr": 11 },
+    { "op": "ADD", "reg": "R1", "reg2": "R2" },
+    { "op": "STORE", "reg": "R1", "addr": 200 },
+    { "op": "SUB", "reg": "R1", "value": 5 },
+    { "op": "IO", "device": 1, "data": "request_data" },
+    { "op": "LOAD", "reg": "R3", "addr": 12 },
+    { "op": "ADD", "reg": "R1", "reg2": "R3" },
+    { "op": "STORE", "reg": "R1", "addr": 201 },
+    { "op": "LOAD", "reg": "R4", "value": 100 },
+    { "op": "JMP", "addr": 2 },
+    { "op": "EXIT" }
+  ]
+}

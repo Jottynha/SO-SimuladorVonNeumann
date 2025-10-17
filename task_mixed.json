@@ -1,0 +1,13 @@
+{
+  "instructions": [
+    { "op": "LOAD", "reg": "R1", "value": 10 },
+    { "op": "ADD", "reg": "R1", "value": 10 },
+    { "op": "STORE", "reg": "R1", "addr": 500 },
+    { "op": "IO", "device": 1, "data": "request_data_1" },
+    { "op": "LOAD", "reg": "R2", "value": 20 },
+    { "op": "ADD", "reg": "R2", "value": 20 },
+    { "op": "STORE", "reg": "R2", "addr": 501 },
+    { "op": "IO", "device": 2, "data": "request_data_2" },
+    { "op": "EXIT" }
+  ]
+}

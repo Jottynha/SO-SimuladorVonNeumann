@@ -15,6 +15,7 @@ bool load_pcb_from_json(const std::string &path, PCB &pcb) {
         json j; f >> j;
         pcb.pid = j.value("pid", 0);
         pcb.name = j.value("name", std::string(""));
+        pcb.program = j.value("program", std::string(""));
         pcb.quantum = j.value("quantum", 0);
         pcb.priority = j.value("priority", 0);
         if (j.contains("mem_weights")) {

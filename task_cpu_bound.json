@@ -1,0 +1,18 @@
+{
+  "instructions": [
+    { "op": "LOAD", "reg": "R1", "value": 50 },
+    { "op": "LOAD", "reg": "R2", "value": 10 },
+    { "op": "ADD", "reg": "R1", "reg2": "R2" },
+    { "op": "ADD", "reg": "R1", "reg2": "R2" },
+    { "op": "ADD", "reg": "R1", "reg2": "R2" },
+    { "op": "SUB", "reg": "R1", "value": 5 },
+    { "op": "ADD", "reg": "R1", "value": 15 },
+    { "op": "ADD", "reg": "R1", "value": 2 },
+    { "op": "STORE", "reg": "R1", "addr": 300 },
+    { "op": "LOAD", "reg": "R3", "value": 100 },
+    { "op": "ADD", "reg": "R3", "value": 100 },
+    { "op": "ADD", "reg": "R3", "value": 100 },
+    { "op": "ADD", "reg": "R3", "value": 100 },
+    { "op": "EXIT" }
+  ]
+}

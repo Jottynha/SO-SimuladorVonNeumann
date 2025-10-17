@@ -1,0 +1,11 @@
+{
+  "instructions": [
+    { "op": "LOAD", "reg": "R1", "addr": 0 },
+    { "op": "ADD", "reg": "R1", "value": 10 },
+    { "op": "STORE", "reg": "R1", "addr": 100 },
+    { "op": "LOAD", "reg": "R2", "addr": 1 },
+    { "op": "ADD", "reg": "R2", "value": 5 },
+    { "op": "STORE", "reg": "R2", "addr": 101 },
+    { "op": "EXIT" }
+  ]
+}

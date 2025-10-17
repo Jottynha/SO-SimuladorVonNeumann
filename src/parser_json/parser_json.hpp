@@ -3,16 +3,18 @@
 #include <string>
 #include <utility>
 #include "../nlohmann/json.hpp"
+#include "../memory/MemoryManager.hpp"
+#include "../cpu/PCB.hpp"
 
 // Forward declarations para evitar inclusões circulares
 class MemoryManager;
-struct PCB;
+class PCB;
 
 using nlohmann::json;
 
 // ===== API principal =====
 // Agora recebe MemoryManager e PCB para carregar o programa
-int loadJsonProgram(const std::string &filename, MemoryManager &memManager, PCB& pcb, int startAddr);
+void loadJsonProgram(const std::string &filename, MemoryManager &memManager, PCB& pcb, uint32_t startAddr);
 
 // ===== Parsers de seção =====
 int parseData(const json &dataJson, MemoryManager &memManager, PCB& pcb, int startAddr);

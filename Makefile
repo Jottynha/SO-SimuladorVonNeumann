@@ -3,12 +3,24 @@ CXX := g++
 CXXFLAGS := -Wall -Wextra -g -std=c++17 -Isrc
 
 # Alvos principais
-TARGET := teste
+TARGET := simulador
 TARGET_HASH := test_hash_register
 TARGET_BANK := test_register_bank
 
 # Fontes principais
-SRC := src/teste.cpp src/cpu/ULA.cpp
+SRC := src/main.cpp \
+       src/cpu/ULA.cpp \
+       src/cpu/CONTROL_UNIT.cpp \
+       src/cpu/REGISTER_BANK.cpp \
+       src/cpu/Scheduler.cpp \
+       src/cpu/pcb_loader.cpp \
+       src/memory/MemoryManager.cpp \
+       src/memory/MAIN_MEMORY.cpp \
+       src/memory/SECONDARY_MEMORY.cpp \
+       src/memory/cache.cpp \
+       src/memory/cachePolicy.cpp \
+       src/parser_json/parser_json.cpp \
+       src/IO/IOManager.cpp
 OBJ := $(SRC:.cpp=.o)
 
 # Fontes para teste do hash register
@@ -20,7 +32,7 @@ SRC_BANK := src/test_register_bank.cpp src/cpu/REGISTER_BANK.cpp
 OBJ_BANK := $(SRC_BANK:.cpp=.o)
 
 # Make clean -> make -> make run
-all: clean $(TARGET) run
+all: clean $(TARGET)
 
 # Regra para o programa principal
 $(TARGET): $(OBJ)

@@ -1,0 +1,7 @@
+{
+  "pid": 102,
+  "name": "Long_Process",
+  "priority": 1,
+  "quantum": 4,
+  "program": "tasks_long.json"
+}

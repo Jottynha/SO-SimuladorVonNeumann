@@ -1,0 +1,14 @@
+{
+    "instructions": [
+        {"op": "io"},
+        {"op": "load", "dest": "R1", "value": 5},
+        {"op": "io"},
+        {"op": "load", "dest": "R2", "value": 15},
+        {"op": "io"},
+        {"op": "add", "dest": "R3", "src1": "R1", "src2": "R2"},
+        {"op": "io"},
+        {"op": "store", "src": "R3", "address": 500},
+        {"op": "io"},
+        {"op": "end"}
+    ]
+}

@@ -1,0 +1,7 @@
+{
+  "pid": 101,
+  "name": "Short_Process",
+  "priority": 2,
+  "quantum": 4,
+  "program": "tasks_short.json"
+}

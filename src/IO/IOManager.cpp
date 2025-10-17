@@ -46,6 +46,33 @@ void IOManager::addRequest(std::unique_ptr<IORequest> request) {
     requests.push_back(std::move(request));
 }
 
+// Verifica se há requisições em andamento ou processos esperando
+bool IOManager::is_busy() {
+    std::lock_guard<std::mutex> q_lock(queueLock);
+    std::lock_guard<std::mutex> wp_lock(waiting_processes_lock);
+    return !requests.empty() || !waiting_processes.empty();
+}
+
+void IOManager::advance_time(int milliseconds) {
+    std::lock_guard<std::mutex> lock(queueLock);
+    if (requests.empty()) {
+        return;
+    }
+
+    auto it = requests.begin();
+    while (it != requests.end()) {
+        (*it)->cost_cycles -= std::chrono::milliseconds(milliseconds);
+        if ((*it)->cost_cycles.count() <= 0) {
+            // A operação de I/O terminou, desbloqueia o processo
+            (*it)->process->state = State::Ready;
+            std::cout << "I/O Manager: Processo " << (*it)->process->pid << " desbloqueado." << std::endl;
+            it = requests.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 void IOManager::managerLoop() {
     while (!shutdown_flag) {
         // ETAPA 1: Simula os dispositivos solicitando uma operação

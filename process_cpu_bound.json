@@ -1,0 +1,7 @@
+{
+    "pid": 103,
+    "name": "CPU_Bound_Process",
+    "program": "task_cpu_bound.json",
+    "priority": 2,
+    "quantum": 10
+}

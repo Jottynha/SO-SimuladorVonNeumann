@@ -1,0 +1,15 @@
+{
+    "instructions": [
+        {"op": "load", "dest": "R1", "value": 100},
+        {"op": "load", "dest": "R2", "value": 200},
+        {"op": "add", "dest": "R3", "src1": "R1", "src2": "R2"},
+        {"op": "sub", "dest": "R4", "src1": "R2", "src2": "R1"},
+        {"op": "mul", "dest": "R5", "src1": "R3", "src2": "R4"},
+        {"op": "div", "dest": "R6", "src1": "R5", "src2": "R1"},
+        {"op": "add", "dest": "R1", "src1": "R1", "src2": "R1"},
+        {"op": "add", "dest": "R2", "src1": "R2", "src2": "R2"},
+        {"op": "mul", "dest": "R3", "src1": "R1", "src2": "R2"},
+        {"op": "io"},
+        {"op": "end"}
+    ]
+}

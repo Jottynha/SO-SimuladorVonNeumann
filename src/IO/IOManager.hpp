@@ -25,6 +25,12 @@ public:
     // Método para um processo se registrar como "esperando por I/O"
     void registerProcessWaitingForIO(PCB* process);
 
+    // Avança o tempo de simulação para o IOManager
+    void advance_time(int milliseconds);
+
+    // Verifica se há requisições em andamento ou processos esperando
+    bool is_busy();
+
 private:
     void managerLoop();
     void addRequest(std::unique_ptr<IORequest> request);
@@ -50,4 +56,4 @@ private:
     std::ofstream outputFile;
 };
 
-#endif // IOMANAGER_HPP 
+#endif // IOMANAGER_HPP

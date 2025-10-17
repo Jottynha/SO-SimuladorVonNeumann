@@ -1,0 +1,66 @@
+
+======================================================
+INICIANDO SIMULACAO COM ESCALONADOR: FCFS
+======================================================
+
+
+--- METRICAS FINAIS DO PROCESSO 101 (Escalonador: FCFS) ---
+Nome do Processo:       Short_Process
+Estado Final:           Finished
+Ciclos de Pipeline:     4
+Total de Acessos a Mem: 22
+  - Leituras:             18
+  - Escritas:             8
+Acessos a Cache L1:     9
+Acessos a Mem Principal:13
+Acessos a Mem Secundaria:0
+Ciclos Totais de Memoria: 74
+Ciclos de IO:           1
+------------------------------------------
+
+
+--- METRICAS FINAIS DO PROCESSO 102 (Escalonador: FCFS) ---
+Nome do Processo:       Long_Process
+Estado Final:           Finished
+Ciclos de Pipeline:     4
+Total de Acessos a Mem: 28
+  - Leituras:             20
+  - Escritas:             12
+Acessos a Cache L1:     12
+Acessos a Mem Principal:16
+Acessos a Mem Secundaria:0
+Ciclos Totais de Memoria: 92
+Ciclos de IO:           1
+------------------------------------------
+
+
+--- METRICAS FINAIS DO PROCESSO 103 (Escalonador: FCFS) ---
+Nome do Processo:       CPU_Bound_Process
+Estado Final:           Finished
+Ciclos de Pipeline:     10
+Total de Acessos a Mem: 38
+  - Leituras:             34
+  - Escritas:             14
+Acessos a Cache L1:     14
+Acessos a Mem Principal:24
+Acessos a Mem Secundaria:0
+Ciclos Totais de Memoria: 134
+Ciclos de IO:           1
+------------------------------------------
+
+
+--- METRICAS FINAIS DO PROCESSO 104 (Escalonador: FCFS) ---
+Nome do Processo:       IO_Bound_Process
+Estado Final:           Finished
+Ciclos de Pipeline:     5
+Total de Acessos a Mem: 23
+  - Leituras:             19
+  - Escritas:             9
+Acessos a Cache L1:     9
+Acessos a Mem Principal:14
+Acessos a Mem Secundaria:0
+Ciclos Totais de Memoria: 79
+Ciclos de IO:           1
+------------------------------------------
+
+FIM DA SIMULACAO (FCFS)

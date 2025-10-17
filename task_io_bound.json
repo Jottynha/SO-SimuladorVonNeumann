@@ -1,0 +1,13 @@
+{
+  "instructions": [
+    { "op": "LOAD", "reg": "R1", "value": 5 },
+    { "op": "IO", "device": 1, "data": "read_block_A" },
+    { "op": "IO", "device": 2, "data": "write_log" },
+    { "op": "ADD", "reg": "R1", "value": 1 },
+    { "op": "IO", "device": 1, "data": "read_block_B" },
+    { "op": "IO", "device": 3, "data": "send_network_packet" },
+    { "op": "STORE", "reg": "R1", "addr": 400 },
+    { "op": "IO", "device": 1, "data": "read_block_C" },
+    { "op": "EXIT" }
+  ]
+}

@@ -19,6 +19,7 @@ set(SIMULATOR_SOURCES
     src/main.cpp
     src/cpu/CONTROL_UNIT.cpp
     src/cpu/pcb_loader.cpp
+    src/cpu/Scheduler.cpp
     src/cpu/REGISTER_BANK.cpp
     src/cpu/ULA.cpp
     src/IO/IOManager.cpp
@@ -42,6 +43,18 @@ add_custom_command(TARGET simulador POST_BUILD
         ${CMAKE_BINARY_DIR}
     COMMAND ${CMAKE_COMMAND} -E copy
         ${CMAKE_SOURCE_DIR}/src/tasks/tasks.json
+        ${CMAKE_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/process_short.json
+        ${CMAKE_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/process_long.json
+        ${CMAKE_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/tasks_short.json
+        ${CMAKE_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/tasks_long.json
         ${CMAKE_BINARY_DIR}
     COMMENT "Copiando arquivos de dados necessários para a execução"
 )

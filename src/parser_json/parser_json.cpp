@@ -17,7 +17,7 @@ const unordered_map<string, int> instructionMap = {
     {"addi",0b001000}, {"andi",0b001100}, {"ori",0b001101}, {"slti",0b001010},
     {"lw",0b100011}, {"sw",0b101011}, {"beq",0b000100}, {"bne",0b000101},
     {"bgt",0b000111}, {"blt",0b001001}, {"li",0b001111}, {"print",0b111110}, {"end",0b111111},
-    {"j",0b000010}, {"jal",0b000011}
+    {"j",0b000010}, {"jal",0b000011}, {"io", 0b111101} // Adicionada instrução IO
 };
 
 const unordered_map<string, int> functMap = {
@@ -63,10 +63,27 @@ pair<int16_t,int> parseOffsetBase(const string &addrExpr){
     return {off, it->second};
 }
 
-int getRegisterCode(const string &reg){
-    auto it = registerMap.find(toLower(reg));
+int getRegisterCode(const string &reg_str_raw){
+    string reg_str = toLower(reg_str_raw);
+
+    // Mapeamento de R1, R2... para $t0, $t1...
+    if (reg_str[0] == 'r' && isdigit(reg_str[1])) {
+        try {
+            int reg_num = std::stoi(reg_str.substr(1));
+            if (reg_num >= 1 && reg_num <= 8) { // Mapeia R1-R8 para $t0-$t7
+                reg_str = "$t" + std::to_string(reg_num - 1);
+            } else if (reg_num > 8 && reg_num <= 16) { // Mapeia R9-R16 para $s0-$s7
+                 reg_str = "$s" + std::to_string(reg_num - 9);
+            }
+        } catch (const std::invalid_argument& ia) {
+            // Ignora e tenta o mapeamento normal
+        }
+    }
+
+
+    auto it = registerMap.find(reg_str);
     if (it!=registerMap.end()) return it->second;
-    throw runtime_error("Registrador desconhecido: " + reg);
+    throw runtime_error("Registrador desconhecido: " + reg_str_raw);
 }
 
 int getOpcode(const string &instr){
@@ -204,14 +221,74 @@ uint32_t encodeJType(const json &j){
     throw runtime_error("J-type requer 'label' ou 'address'");
 }
 
+// Função para converter uma instrução JSON em binário
 uint32_t parseInstruction(const json &instrJson, int currentInstrIndex){
-    const string mnem = instrJson.at("instruction").get<string>();
-    if (mnem=="end" || mnem=="print")
-        return static_cast<uint32_t>(getOpcode(mnem)) << 26;
+    string instr_str = toLower(instrJson["op"].get<string>());
 
-    if (functMap.count(mnem))              return encodeRType(instrJson);
-    if (mnem=="j" || mnem=="jal")          return encodeJType(instrJson);
-    return encodeIType(instrJson, currentInstrIndex);
+    // Mapeamento de instruções do novo formato para o formato MIPS esperado
+    if (instr_str == "load") instr_str = "lw";
+    else if (instr_str == "store") instr_str = "sw";
+    else if (instr_str == "add" && instrJson.contains("value")) instr_str = "addi";
+    else if (instr_str == "add" && instrJson.contains("reg2")) instr_str = "add";
+    else if (instr_str == "sub" && instrJson.contains("value")) instr_str = "sub"; // Assumindo sub imediato, embora não padrão
+    else if (instr_str == "jmp") instr_str = "j";
+    else if (instr_str == "exit") instr_str = "end";
+
+
+    int opcode = getOpcode(instr_str);
+    int funct = getFunct(instr_str);
+
+    int rs=0, rt=0, rd=0, shamt=0, immediate=0, address=0;
+
+    // Tipo R (add, sub, etc.)
+    if (opcode == 0) {
+        rd = getRegisterCode(instrJson.value("reg", "$zero"));
+        rs = getRegisterCode(instrJson.value("reg", "$zero"));
+        if (instrJson.contains("reg2")) {
+            rt = getRegisterCode(instrJson.value("reg2", "$zero"));
+        } else {
+            rt = getRegisterCode(instrJson.value("rt", "$zero"));
+        }
+        shamt = instrJson.value("shamt", 0);
+    }
+    // Tipo I (lw, sw, addi, beq, etc.)
+    else if (instr_str == "lw" || instr_str == "sw") {
+        rt = getRegisterCode(instrJson.value("reg", "$zero"));
+        rs = 0; // Assumindo base $zero
+        immediate = instrJson.value("addr", 0);
+    }
+    else if (instr_str == "addi") {
+        rt = getRegisterCode(instrJson.value("reg", "$zero"));
+        rs = rt; // addi R1, R1, value
+        immediate = instrJson.value("value", 0);
+    }
+     else if (instr_str == "beq" || instr_str == "bne" || instr_str == "bgt" || instr_str == "blt") {
+        rs = getRegisterCode(instrJson.value("rs", "$zero"));
+        rt = getRegisterCode(instrJson.value("rt", "$zero"));
+        string label = instrJson.value("label", "");
+        immediate = labelMap.count(label) ? (labelMap[label] - (currentInstrIndex + 1)) : 0;
+    }
+    // Tipo J (j, jal)
+    else if (instr_str == "j" || instr_str == "jal") {
+        if (instrJson.contains("label")) {
+            string label = instrJson.value("label", "");
+            address = labelMap.count(label) ? labelMap[label] : 0;
+        } else {
+            address = instrJson.value("addr", 0);
+        }
+    }
+    // Instrução IO
+    else if (instr_str == "io") {
+        rt = instrJson.value("device", 0); // device no campo rt
+        immediate = 0; // O campo 'data' é uma string, não pode ser codificado diretamente.
+                       // A lógica da CPU precisará lidar com isso.
+    }
+    // Instruções especiais (end, print)
+    else if (instr_str == "end") {
+        // 'end' não tem operandos, apenas opcode
+    }
+
+    return buildBinaryInstruction(opcode, rs, rt, rd, shamt, funct, immediate, address);
 }
 
 // ======= Seções (Alteradas para usar MemoryManager) =======
@@ -330,13 +407,67 @@ static json readJsonFile(const string &filename){
     json j; f >> j; return j;
 }
 
-int loadJsonProgram(const string &filename, MemoryManager &memManager, PCB& pcb, int startAddr){
+void loadJsonProgram(const string &filename, MemoryManager &mem, PCB &pcb, uint32_t base_address) {
+    ifstream file(filename);
+    if (!file.is_open()) throw runtime_error("Não foi possível abrir o arquivo: " + filename);
+
+    json j;
+    file >> j;
+
     dataMap.clear();
     labelMap.clear();
 
-    json j = readJsonFile(filename);
-    int addr = startAddr;
-    if (j.contains("data"))    addr = parseData(j["data"], memManager, pcb, addr);
-    if (j.contains("program")) addr = parseProgram(j["program"], memManager, pcb, addr);
-    return addr;
+    uint32_t currentDataAddr = base_address + (j.count("instructions") ? j["instructions"].size() * 4 : 0);
+    if (j.count("data")) {
+        for (auto &elem : j["data"]) {
+            string label = elem["label"].get<string>();
+            dataMap[label] = currentDataAddr;
+            // O valor dos dados não é pré-carregado na memória, apenas o rótulo é mapeado.
+            // A memória para dados é alocada dinamicamente ou gerenciada pelo programa em execução.
+            currentDataAddr += 4; // Assume que cada dado ocupa 4 bytes
+        }
+    }
+
+    uint32_t currentInstructionAddr = base_address;
+    if (j.contains("instructions")) { // Corrigido de "text" para "instructions"
+        // Primeira passagem: mapeia labels (se houver)
+        uint32_t instruction_addr = base_address;
+        for (const auto &instr_json : j["instructions"]) {
+            if (instr_json.contains("label")) {
+                string label = instr_json["label"].get<string>();
+                labelMap[label] = instruction_addr;
+            }
+            instruction_addr++;
+        }
+
+        // Segunda passagem: processa instruções
+        currentInstructionAddr = base_address;
+        int instr_index = 0;
+        for (const auto &instr_json : j["instructions"]) {
+            uint32_t binary_instr = parseInstruction(instr_json, instr_index++); // Passa o objeto da instrução diretamente
+            mem.write(currentInstructionAddr, binary_instr, pcb);
+            currentInstructionAddr += 4;
+        }
+    } else if (j.contains("text")) { // Mantém a compatibilidade com o formato antigo
+        // Primeira passagem: mapeia labels
+        uint32_t instruction_addr = base_address;
+        for (const auto &instr_json : j["text"]) {
+            if (instr_json.contains("label")) {
+                string label = instr_json["label"].get<string>();
+                labelMap[label] = instruction_addr;
+            }
+            instruction_addr++;
+        }
+
+        // Segunda passagem: processa instruções
+        currentInstructionAddr = base_address;
+        int instr_index = 0;
+        for (const auto &instr_json : j["text"]) {
+            if (instr_json.contains("instruction")) {
+                uint32_t binary_instr = parseInstruction(instr_json["instruction"], instr_index++);
+                mem.write(currentInstructionAddr, binary_instr, pcb);
+                currentInstructionAddr += 4;
+            }
+        }
+    }
 }
