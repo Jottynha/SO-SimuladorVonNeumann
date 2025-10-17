@@ -1,0 +1,9 @@
+{
+    "pid": 2,
+    "name": "Long Process",
+    "priority": 2,
+    "quantum": 20,
+    "start_time": 0,
+    "base_address": 2048,
+    "limit_address": 4095
+}

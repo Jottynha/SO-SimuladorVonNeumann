@@ -9,6 +9,7 @@
 #include <string>
 #include <atomic>
 #include <cstdint>
+#include <vector>
 #include "memory/cache.hpp"
 #include "REGISTER_BANK.hpp" // necessidade de objeto completo dentro do PCB
 
@@ -30,11 +31,19 @@ struct MemWeights {
 struct PCB {
     int pid = 0;
     std::string name;
-    int quantum = 0;
+    int quantum = 10; // Valor padrão para quantum
     int priority = 0;
+    size_t base_address = 0; // Endereço base do processo na memória
 
     State state = State::Ready;
     hw::REGISTER_BANK regBank;
+    int instruction_count = 0; // Contador de instruções executadas
+
+    std::vector<std::string> execution_log; // Log de execução
+
+    // Campos auxiliares para detectar estagnação (loop infinito)
+    int stagnation_counter = 0;    // conta quantas vezes o processo voltou pronto sem avançar
+    int last_instruction_count = 0; // última contagem de instruções observada
 
     // Contadores de acesso à memória
     std::atomic<uint64_t> primary_mem_accesses{0};
@@ -56,6 +65,8 @@ struct PCB {
     std::atomic<uint64_t> io_cycles{1};
 
     MemWeights memWeights;
+
+    PCB() : state(State::Ready), base_address(0), quantum(10), instruction_count(0) {}
 };
 
 // Contabilizar cache

@@ -21,6 +21,7 @@ set(SIMULATOR_SOURCES
     src/cpu/pcb_loader.cpp
     src/cpu/REGISTER_BANK.cpp
     src/cpu/ULA.cpp
+    src/cpu/Scheduler.cpp
     src/IO/IOManager.cpp
     src/memory/cache.cpp
     src/memory/cachePolicy.cpp
@@ -38,10 +39,14 @@ target_link_libraries(simulador PRIVATE pthread)
 # Esta seção garante que os arquivos .json estejam junto do executável
 add_custom_command(TARGET simulador POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/process1.json
-        ${CMAKE_BINARY_DIR}
-    COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/src/tasks/tasks.json
+        ${CMAKE_SOURCE_DIR}/process_short.json
+        ${CMAKE_SOURCE_DIR}/process_long.json
+        ${CMAKE_SOURCE_DIR}/process_cpu_bound.json
+        ${CMAKE_SOURCE_DIR}/process_io_bound.json
+        ${CMAKE_SOURCE_DIR}/tasks_short.json
+        ${CMAKE_SOURCE_DIR}/tasks_long.json
+        ${CMAKE_SOURCE_DIR}/tasks_cpu_bound.json
+        ${CMAKE_SOURCE_DIR}/tasks_io_bound.json
         ${CMAKE_BINARY_DIR}
     COMMENT "Copiando arquivos de dados necessários para a execução"
 )
