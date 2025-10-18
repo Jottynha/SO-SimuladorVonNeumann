@@ -27,6 +27,7 @@ struct SchedulerMetrics {
     uint64_t total_cache_misses = 0;
     double cache_hit_rate = 0.0;
     int processes_finished = 0;
+    int context_switches = 0;
 };
 
 // Função para imprimir as métricas de um processo
@@ -100,6 +101,9 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
     auto start_time = std::chrono::high_resolution_clock::now();
     
     MemoryManager memManager(8192, 16384);
+    // Reset cache para garantir execução limpa entre escalonadores
+    memManager.resetCache();
+    
     IOManager ioManager;
     Scheduler scheduler(scheduler_type);
     
@@ -184,6 +188,12 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
                 }
             }
             current_process->state = State::Ready;
+            
+            // Simular cache pollution durante context switch
+            // Quanto mais processos, mais a cache é "poluída"
+            memManager.simulateContextSwitch();
+            scheduler.increment_context_switch();
+            
             scheduler.add_process(current_process);
         }
     }
@@ -197,6 +207,7 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
     
     metrics.execution_time_ms = duration.count() / 1000.0;
     metrics.processes_finished = finished_processes;
+    metrics.context_switches = scheduler.get_context_switch_count();
     
     uint64_t total_cache_accesses = metrics.total_cache_hits + metrics.total_cache_misses;
     metrics.cache_hit_rate = (total_cache_accesses > 0) ? 
@@ -207,33 +218,35 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
 
 // Função para imprimir tabela comparativa
 void print_comparison_table(const std::vector<SchedulerMetrics>& all_metrics) {
-    std::cout << "\n" << std::string(100, '=') << "\n";
+    std::cout << "\n" << std::string(120, '=') << "\n";
     std::cout << "                    TABELA COMPARATIVA DE ESCALONADORES\n";
-    std::cout << std::string(100, '=') << "\n\n";
+    std::cout << std::string(120, '=') << "\n\n";
     
     // Cabeçalho
     std::cout << std::left << std::setw(15) << "Escalonador"
               << std::right << std::setw(15) << "Tempo (ms)"
-              << std::setw(15) << "Processos"
+              << std::setw(12) << "Processos"
+              << std::setw(12) << "Ctx Switch"
               << std::setw(15) << "Ciclos CPU"
-              << std::setw(20) << "Acessos Mem"
-              << std::setw(20) << "Taxa Cache(%)"
+              << std::setw(15) << "Acessos Mem"
+              << std::setw(18) << "Taxa Cache(%)"
               << "\n";
-    std::cout << std::string(100, '-') << "\n";
+    std::cout << std::string(120, '-') << "\n";
     
     // Dados
     for (const auto& metrics : all_metrics) {
         std::cout << std::left << std::setw(15) << metrics.name
                   << std::right << std::fixed << std::setprecision(3)
                   << std::setw(15) << metrics.execution_time_ms
-                  << std::setw(15) << metrics.processes_finished
+                  << std::setw(12) << metrics.processes_finished
+                  << std::setw(12) << metrics.context_switches
                   << std::setw(15) << metrics.total_pipeline_cycles
-                  << std::setw(20) << metrics.total_memory_accesses
-                  << std::setw(20) << std::setprecision(2) << metrics.cache_hit_rate
+                  << std::setw(15) << metrics.total_memory_accesses
+                  << std::setw(18) << std::setprecision(2) << metrics.cache_hit_rate
                   << "\n";
     }
     
-    std::cout << std::string(100, '=') << "\n";
+    std::cout << std::string(120, '=') << "\n";
     
     // Análise
     auto fastest = std::min_element(all_metrics.begin(), all_metrics.end(),
@@ -246,12 +259,19 @@ void print_comparison_table(const std::vector<SchedulerMetrics>& all_metrics) {
             return a.cache_hit_rate < b.cache_hit_rate;
         });
     
+    auto fewest_switches = std::min_element(all_metrics.begin(), all_metrics.end(),
+        [](const SchedulerMetrics& a, const SchedulerMetrics& b) {
+            return a.context_switches < b.context_switches;
+        });
+    
     std::cout << "\n📊 ANÁLISE:\n";
     std::cout << "  🏆 Mais Rápido:         " << fastest->name 
               << " (" << fastest->execution_time_ms << " ms)\n";
     std::cout << "  💾 Melhor Taxa Cache:   " << most_efficient_cache->name 
               << " (" << most_efficient_cache->cache_hit_rate << "%)\n";
-    std::cout << std::string(100, '=') << "\n\n";
+    std::cout << "  🔄 Menos Context Switches: " << fewest_switches->name 
+              << " (" << fewest_switches->context_switches << " switches)\n";
+    std::cout << std::string(120, '=') << "\n\n";
 }
 
 
@@ -276,8 +296,16 @@ int main() {
         all_metrics.push_back(run_scheduler(SchedulerType::FCFS, "FCFS", true));
         std::cout << " ✅\n";
         
+        std::cout << "🔄 Resetando cache para próximo teste..." << std::flush;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Pequena pausa
+        std::cout << " ✅\n";
+        
         std::cout << "⏳ Executando SJN..." << std::flush;
         all_metrics.push_back(run_scheduler(SchedulerType::SJN, "SJN", true));
+        std::cout << " ✅\n";
+        
+        std::cout << "🔄 Resetando cache para próximo teste..." << std::flush;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Pequena pausa
         std::cout << " ✅\n";
         
         std::cout << "⏳ Executando Priority..." << std::flush;

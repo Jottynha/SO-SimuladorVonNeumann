@@ -57,11 +57,15 @@ public:
 class Scheduler {
 private:
     std::unique_ptr<SchedulingPolicy> policy;
+    int context_switch_count = 0;
+    
 public:
     Scheduler(SchedulerType type);
     void add_process(PCB* process);
     PCB* get_next_process();
     bool is_empty() const;
+    int get_context_switch_count() const { return context_switch_count; }
+    void increment_context_switch() { context_switch_count++; }
 };
 
 #endif // SCHEDULER_HPP

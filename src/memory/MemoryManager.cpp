@@ -70,3 +70,22 @@ void MemoryManager::writeToFile(uint32_t address, uint32_t data) {
         secondaryMemory->WriteMem(secondaryAddress, data);
     }
 }
+
+void MemoryManager::resetCache() {
+    L1_cache->reset();
+}
+
+void MemoryManager::simulateContextSwitch() {
+    // Durante um context switch, parte da cache é invalidada (cache pollution)
+    // Context switches causam:
+    // - FCFS: menos switches (menos pollution) -> melhor cache
+    // - SJN: switches médios -> cache média
+    // - Priority: mais switches (mais pollution) -> pior cache
+    
+    // Invalida toda a cache para simular que outro processo usou a CPU
+    // Em sistemas reais, isso acontece porque:
+    // 1. Outro processo carrega suas próprias instruções/dados
+    // 2. TLB (Translation Lookaside Buffer) é esvaziada
+    // 3. Linhas de cache são substituídas
+    L1_cache->invalidate();
+}

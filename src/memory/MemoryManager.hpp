@@ -18,6 +18,12 @@ public:
     uint32_t read(uint32_t address, PCB& process);
     void write(uint32_t address, uint32_t data, PCB& process);
     
+    // Método para resetar a cache (útil entre execuções de diferentes escalonadores)
+    void resetCache();
+    
+    // Simula cache pollution (invalidação parcial) durante context switch
+    void simulateContextSwitch();
+    
     // Função auxiliar para o write-back da cache
     void writeToFile(uint32_t address, uint32_t data);
 

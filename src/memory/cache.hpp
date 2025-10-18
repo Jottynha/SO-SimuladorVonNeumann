@@ -35,6 +35,7 @@ public:
     void put(size_t address, size_t data, MemoryManager* memManager);
     void update(size_t address, size_t data);
     void invalidate();
+    void reset(); // Reseta completamente a cache (dados + estatísticas)
     std::vector<std::pair<size_t, size_t>> dirtyData(); // Mantido para possíveis outras lógicas
 };
 

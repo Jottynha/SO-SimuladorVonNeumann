@@ -79,6 +79,15 @@ void Cache::invalidate() {
     fifo_queue.swap(empty);
 }
 
+void Cache::reset() {
+    // Limpa completamente a cache (dados + estatísticas)
+    cacheMap.clear();
+    std::queue<size_t> empty;
+    fifo_queue.swap(empty);
+    cache_hits = 0;
+    cache_misses = 0;
+}
+
 std::vector<std::pair<size_t, size_t>> Cache::dirtyData() {
     std::vector<std::pair<size_t, size_t>> dirty_data;
     for (const auto &c : cacheMap) {
