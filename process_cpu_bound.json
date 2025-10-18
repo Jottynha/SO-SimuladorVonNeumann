@@ -2,5 +2,5 @@
     "pid": 103,
     "name": "CPU-Bound Process",
     "priority": 2,
-    "quantum": 2
+    "quantum": 10
 }

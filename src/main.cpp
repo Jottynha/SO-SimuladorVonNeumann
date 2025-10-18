@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <ctime>
 
 
 #include "cpu/PCB.hpp"
@@ -28,6 +29,16 @@ struct SchedulerMetrics {
     double cache_hit_rate = 0.0;
     int processes_finished = 0;
     int context_switches = 0;
+    
+    // Métricas adicionais
+    uint64_t total_memory_reads = 0;
+    uint64_t total_memory_writes = 0;
+    uint64_t total_cache_accesses = 0;
+    uint64_t total_primary_mem_accesses = 0;
+    uint64_t total_secondary_mem_accesses = 0;
+    uint64_t total_memory_cycles = 0;
+    double avg_memory_cycles_per_access = 0.0;
+    double throughput = 0.0; // processos/segundo
 };
 
 // Função para imprimir as métricas de um processo
@@ -170,6 +181,12 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
             metrics.total_memory_accesses += current_process->mem_accesses_total.load();
             metrics.total_cache_hits += current_process->cache_hits.load();
             metrics.total_cache_misses += current_process->cache_misses.load();
+            metrics.total_memory_reads += current_process->mem_reads.load();
+            metrics.total_memory_writes += current_process->mem_writes.load();
+            metrics.total_cache_accesses += current_process->cache_mem_accesses.load();
+            metrics.total_primary_mem_accesses += current_process->primary_mem_accesses.load();
+            metrics.total_secondary_mem_accesses += current_process->secondary_mem_accesses.load();
+            metrics.total_memory_cycles += current_process->memory_cycles.load();
             finished_processes++;
         } else {
             bool progressed = (current_process->instruction_count > before_instr) || 
@@ -209,44 +226,167 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
     metrics.processes_finished = finished_processes;
     metrics.context_switches = scheduler.get_context_switch_count();
     
+    // Calcular métricas derivadas
     uint64_t total_cache_accesses = metrics.total_cache_hits + metrics.total_cache_misses;
     metrics.cache_hit_rate = (total_cache_accesses > 0) ? 
         (100.0 * metrics.total_cache_hits / total_cache_accesses) : 0.0;
     
+    metrics.avg_memory_cycles_per_access = (metrics.total_memory_accesses > 0) ?
+        (static_cast<double>(metrics.total_memory_cycles) / metrics.total_memory_accesses) : 0.0;
+    
+    // Throughput: processos finalizados por segundo
+    metrics.throughput = (metrics.execution_time_ms > 0) ?
+        (finished_processes * 1000.0 / metrics.execution_time_ms) : 0.0;
+    
     return metrics;
+}
+
+// Função para salvar tabela detalhada em arquivo
+void save_detailed_comparison(const std::vector<SchedulerMetrics>& all_metrics, const std::string& filename) {
+    std::ofstream outFile(filename);
+    if (!outFile.is_open()) {
+        std::cerr << "Erro ao criar arquivo " << filename << "\n";
+        return;
+    }
+    
+    outFile << std::string(150, '=') << "\n";
+    outFile << "                    RELATÓRIO COMPARATIVO DETALHADO DE ESCALONADORES\n";
+    
+    // Obter timestamp atual
+    auto now = std::time(nullptr);
+    auto tm = *std::localtime(&now);
+    outFile << "                    Data: " << std::put_time(&tm, "%d/%m/%Y %H:%M:%S") << "\n";
+    
+    outFile << std::string(150, '=') << "\n\n";
+    
+    // Tabela de Desempenho Geral
+    outFile << "=== DESEMPENHO GERAL ===\n\n";
+    outFile << std::left << std::setw(15) << "Escalonador"
+            << std::right << std::setw(18) << "Tempo Exec(ms)"
+            << std::setw(15) << "Throughput"
+            << std::setw(15) << "Processos"
+            << std::setw(15) << "Ctx Switch"
+            << std::setw(18) << "Ciclos CPU"
+            << "\n";
+    outFile << std::string(100, '-') << "\n";
+    
+    for (const auto& m : all_metrics) {
+        outFile << std::left << std::setw(15) << m.name
+                << std::right << std::fixed << std::setprecision(3)
+                << std::setw(18) << m.execution_time_ms
+                << std::setprecision(2)
+                << std::setw(15) << m.throughput
+                << std::setw(15) << m.processes_finished
+                << std::setw(15) << m.context_switches
+                << std::setw(18) << m.total_pipeline_cycles
+                << "\n";
+    }
+    
+    // Tabela de Métricas de Memória
+    outFile << "\n\n=== MÉTRICAS DE MEMÓRIA ===\n\n";
+    outFile << std::left << std::setw(15) << "Escalonador"
+            << std::right << std::setw(18) << "Acessos Total"
+            << std::setw(15) << "Leituras"
+            << std::setw(15) << "Escritas"
+            << std::setw(18) << "Cache Hits"
+            << std::setw(18) << "Cache Misses"
+            << "\n";
+    outFile << std::string(100, '-') << "\n";
+    
+    for (const auto& m : all_metrics) {
+        outFile << std::left << std::setw(15) << m.name
+                << std::right << std::setw(18) << m.total_memory_accesses
+                << std::setw(15) << m.total_memory_reads
+                << std::setw(15) << m.total_memory_writes
+                << std::setw(18) << m.total_cache_hits
+                << std::setw(18) << m.total_cache_misses
+                << "\n";
+    }
+    
+    // Tabela de Eficiência
+    outFile << "\n\n=== EFICIÊNCIA DE CACHE E MEMÓRIA ===\n\n";
+    outFile << std::left << std::setw(15) << "Escalonador"
+            << std::right << std::setw(18) << "Taxa Cache(%)"
+            << std::setw(20) << "Ciclos Mem/Acesso"
+            << std::setw(18) << "Mem Principal"
+            << std::setw(18) << "Mem Secundária"
+            << "\n";
+    outFile << std::string(100, '-') << "\n";
+    
+    for (const auto& m : all_metrics) {
+        outFile << std::left << std::setw(15) << m.name
+                << std::right << std::fixed << std::setprecision(2)
+                << std::setw(18) << m.cache_hit_rate
+                << std::setprecision(3)
+                << std::setw(20) << m.avg_memory_cycles_per_access
+                << std::setw(18) << m.total_primary_mem_accesses
+                << std::setw(18) << m.total_secondary_mem_accesses
+                << "\n";
+    }
+    
+    // Análise Comparativa
+    outFile << "\n\n=== ANÁLISE COMPARATIVA ===\n\n";
+    
+    auto fastest = std::min_element(all_metrics.begin(), all_metrics.end(),
+        [](const auto& a, const auto& b) { return a.execution_time_ms < b.execution_time_ms; });
+    auto best_cache = std::max_element(all_metrics.begin(), all_metrics.end(),
+        [](const auto& a, const auto& b) { return a.cache_hit_rate < b.cache_hit_rate; });
+    auto best_throughput = std::max_element(all_metrics.begin(), all_metrics.end(),
+        [](const auto& a, const auto& b) { return a.throughput < b.throughput; });
+    auto fewest_switches = std::min_element(all_metrics.begin(), all_metrics.end(),
+        [](const auto& a, const auto& b) { return a.context_switches < b.context_switches; });
+    
+    outFile << "🏆 Mais Rápido:           " << fastest->name 
+            << " (" << fastest->execution_time_ms << " ms)\n";
+    outFile << "💾 Melhor Taxa Cache:     " << best_cache->name 
+            << " (" << best_cache->cache_hit_rate << "%)\n";
+    outFile << "⚡ Maior Throughput:       " << best_throughput->name 
+            << " (" << best_throughput->throughput << " proc/s)\n";
+    outFile << "🔄 Menos Ctx Switches:    " << fewest_switches->name 
+            << " (" << fewest_switches->context_switches << " switches)\n";
+    
+    outFile << "\n" << std::string(150, '=') << "\n";
+    outFile.close();
 }
 
 // Função para imprimir tabela comparativa
 void print_comparison_table(const std::vector<SchedulerMetrics>& all_metrics) {
-    std::cout << "\n" << std::string(120, '=') << "\n";
+    std::cout << "\n" << std::string(140, '=') << "\n";
     std::cout << "                    TABELA COMPARATIVA DE ESCALONADORES\n";
-    std::cout << std::string(120, '=') << "\n\n";
+    std::cout << std::string(140, '=') << "\n\n";
     
     // Cabeçalho
-    std::cout << std::left << std::setw(15) << "Escalonador"
-              << std::right << std::setw(15) << "Tempo (ms)"
-              << std::setw(12) << "Processos"
-              << std::setw(12) << "Ctx Switch"
-              << std::setw(15) << "Ciclos CPU"
-              << std::setw(15) << "Acessos Mem"
-              << std::setw(18) << "Taxa Cache(%)"
+    std::cout << std::left << std::setw(12) << "Escalonador"
+              << std::right << std::setw(13) << "Tempo(ms)"
+              << std::setw(12) << "Throughput"
+              << std::setw(10) << "Procs"
+              << std::setw(10) << "CtxSwch"
+              << std::setw(13) << "Ciclos CPU"
+              << std::setw(13) << "Acess Mem"
+              << std::setw(15) << "Cache Hit(%)"
+              << std::setw(15) << "Ciclos/Acess"
               << "\n";
-    std::cout << std::string(120, '-') << "\n";
+    std::cout << std::string(140, '-') << "\n";
     
     // Dados
     for (const auto& metrics : all_metrics) {
-        std::cout << std::left << std::setw(15) << metrics.name
-                  << std::right << std::fixed << std::setprecision(3)
-                  << std::setw(15) << metrics.execution_time_ms
-                  << std::setw(12) << metrics.processes_finished
-                  << std::setw(12) << metrics.context_switches
-                  << std::setw(15) << metrics.total_pipeline_cycles
-                  << std::setw(15) << metrics.total_memory_accesses
-                  << std::setw(18) << std::setprecision(2) << metrics.cache_hit_rate
+        std::cout << std::left << std::setw(12) << metrics.name
+                  << std::right << std::fixed << std::setprecision(2)
+                  << std::setw(13) << metrics.execution_time_ms
+                  << std::setprecision(1)
+                  << std::setw(12) << metrics.throughput
+                  << std::setw(10) << metrics.processes_finished
+                  << std::setw(10) << metrics.context_switches
+                  << std::setw(13) << metrics.total_pipeline_cycles
+                  << std::setw(13) << metrics.total_memory_accesses
+                  << std::setprecision(2)
+                  << std::setw(15) << metrics.cache_hit_rate
+                  << std::setprecision(2)
+                  << std::setw(15) << metrics.avg_memory_cycles_per_access
                   << "\n";
     }
     
-    std::cout << std::string(120, '=') << "\n";
+    std::cout << std::string(140, '=') << "\n";
     
     // Análise
     auto fastest = std::min_element(all_metrics.begin(), all_metrics.end(),
@@ -314,10 +454,14 @@ int main() {
         
         print_comparison_table(all_metrics);
         
+        // Salvar tabela detalhada em arquivo
+        save_detailed_comparison(all_metrics, "output/comparacao_escalonadores.txt");
+        
         std::cout << "📁 Logs detalhados salvos em:\n";
         std::cout << "   - output/resultados_FCFS.dat\n";
         std::cout << "   - output/resultados_SJN.dat\n";
-        std::cout << "   - output/resultados_Priority.dat\n\n";
+        std::cout << "   - output/resultados_Priority.dat\n";
+        std::cout << "   - output/comparacao_escalonadores.txt (Tabela Comparativa Completa)\n\n";
         
         return 0;
     }

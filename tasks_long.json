@@ -1,13 +1,23 @@
 {
     "program": [
-        { "instruction": "li", "rt": "$t0", "immediate": 1 },
-        { "instruction": "li", "rt": "$t1", "immediate": 10 },
-        { "instruction": "li", "rt": "$t2", "immediate": 0 },
-        { "label": "loop_start" },
-        { "instruction": "add", "rd": "$t2", "rs": "$t2", "rt": "$t1" },
-        { "instruction": "sub", "rd": "$t1", "rs": "$t1", "rt": "$t0" },
-        { "instruction": "bgt", "rs": "$t1", "rt": "$zero", "label": "loop_start" },
-        { "instruction": "print", "rt": "$t2" },
+        { "instruction": "li", "rt": "$t0", "immediate": 100 },
+        { "instruction": "sw", "rt": "$t0", "addr": "0($gp)" },
+        { "instruction": "sw", "rt": "$t0", "addr": "4($gp)" },
+        { "instruction": "lw", "rt": "$t1", "addr": "0($gp)" },
+        { "instruction": "lw", "rt": "$t2", "addr": "4($gp)" },
+        { "instruction": "lw", "rt": "$t1", "addr": "0($gp)" },
+        { "instruction": "lw", "rt": "$t2", "addr": "4($gp)" },
+        { "instruction": "lw", "rt": "$t1", "addr": "0($gp)" },
+        { "instruction": "lw", "rt": "$t2", "addr": "4($gp)" },
+        { "instruction": "lw", "rt": "$t1", "addr": "0($gp)" },
+        { "instruction": "lw", "rt": "$t2", "addr": "4($gp)" },
+        { "instruction": "add", "rd": "$t3", "rs": "$t1", "rt": "$t2" },
+        { "instruction": "sw", "rt": "$t3", "addr": "8($gp)" },
+        { "instruction": "lw", "rt": "$t4", "addr": "8($gp)" },
+        { "instruction": "lw", "rt": "$t5", "addr": "8($gp)" },
+        { "instruction": "lw", "rt": "$t6", "addr": "8($gp)" },
+        { "instruction": "add", "rd": "$t7", "rs": "$t4", "rt": "$t5" },
+        { "instruction": "print", "rt": "$t7" },
         { "instruction": "end" }
     ]
 }
