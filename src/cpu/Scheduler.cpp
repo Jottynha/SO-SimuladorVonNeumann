@@ -62,6 +62,25 @@ bool Priority_Policy::is_empty() const {
     return ready_queue.empty();
 }
 
+// --- Round Robin ---
+void RoundRobin_Policy::add(PCB* process) {
+    ready_queue.push_back(process);
+}
+
+PCB* RoundRobin_Policy::get_next() {
+    if (ready_queue.empty()) {
+        return nullptr;
+    }
+    // Round Robin: pega o primeiro da fila
+    PCB* process = ready_queue.front();
+    ready_queue.pop_front();
+    return process;
+}
+
+bool RoundRobin_Policy::is_empty() const {
+    return ready_queue.empty();
+}
+
 // --- Scheduler ---
 Scheduler::Scheduler(SchedulerType type) {
     switch (type) {
@@ -73,6 +92,9 @@ Scheduler::Scheduler(SchedulerType type) {
             break;
         case SchedulerType::Priority:
             policy = std::make_unique<Priority_Policy>();
+            break;
+        case SchedulerType::RoundRobin:
+            policy = std::make_unique<RoundRobin_Policy>();
             break;
     }
 }

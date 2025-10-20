@@ -10,6 +10,7 @@
 #include <atomic>
 #include <cstdint>
 #include <vector>
+#include <chrono>
 #include "memory/cache.hpp"
 #include "REGISTER_BANK.hpp" // necessidade de objeto completo dentro do PCB
 
@@ -63,6 +64,15 @@ struct PCB {
     std::atomic<uint64_t> cache_hits{0};
     std::atomic<uint64_t> cache_misses{0};
     std::atomic<uint64_t> io_cycles{1};
+
+    // Métricas de tempo para escalonamento
+    std::chrono::time_point<std::chrono::high_resolution_clock> arrival_time;
+    std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
+    std::chrono::time_point<std::chrono::high_resolution_clock> finish_time;
+    uint64_t wait_time_ms = 0;        // Tempo de espera
+    uint64_t turnaround_time_ms = 0;  // Tempo de retorno (turnaround)
+    uint64_t response_time_ms = 0;    // Tempo de resposta
+    bool first_run = true;             // Indica se é a primeira execução
 
     MemWeights memWeights;
 

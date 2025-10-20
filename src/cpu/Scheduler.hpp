@@ -11,7 +11,8 @@
 enum class SchedulerType {
     FCFS,
     SJN,
-    Priority
+    Priority,
+    RoundRobin
 };
 
 // Interface para as políticas de escalonamento
@@ -47,6 +48,16 @@ public:
 class Priority_Policy : public SchedulingPolicy {
 private:
     std::vector<PCB*> ready_queue;
+public:
+    void add(PCB* process) override;
+    PCB* get_next() override;
+    bool is_empty() const override;
+};
+
+// Implementação do Round Robin
+class RoundRobin_Policy : public SchedulingPolicy {
+private:
+    std::deque<PCB*> ready_queue;
 public:
     void add(PCB* process) override;
     PCB* get_next() override;
