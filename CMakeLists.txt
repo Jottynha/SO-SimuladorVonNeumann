@@ -38,17 +38,13 @@ target_link_libraries(simulador PRIVATE pthread)
 # --- COPIAR ARQUIVOS DE DADOS PARA O DIRETÓRIO DE BUILD ---
 # Esta seção garante que os arquivos .json estejam junto do executável
 add_custom_command(TARGET simulador POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/process_short.json
-        ${CMAKE_SOURCE_DIR}/process_long.json
-        ${CMAKE_SOURCE_DIR}/process_cpu_bound.json
-        ${CMAKE_SOURCE_DIR}/process_io_bound.json
-        ${CMAKE_SOURCE_DIR}/tasks_short.json
-        ${CMAKE_SOURCE_DIR}/tasks_long.json
-        ${CMAKE_SOURCE_DIR}/tasks_cpu_bound.json
-        ${CMAKE_SOURCE_DIR}/tasks_io_bound.json
-        ${CMAKE_BINARY_DIR}
-    COMMENT "Copiando arquivos de dados necessários para a execução"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/processes
+        ${CMAKE_BINARY_DIR}/processes
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/tasks
+        ${CMAKE_BINARY_DIR}/tasks
+    COMMENT "Copiando arquivos de processos e tasks para execução"
 )
 
 # --- ALVOS DE TESTE (CADA UM COM SUAS DEPENDÊNCIAS) ---

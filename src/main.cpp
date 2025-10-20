@@ -73,32 +73,60 @@ void print_metrics(const PCB& pcb, std::ofstream& outFile) {
 std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager) {
     std::vector<std::unique_ptr<PCB>> process_list;
     
-    // Processo 1: Short
+    // Processo 1: Quick
     auto p1 = std::make_unique<PCB>();
-    if (load_pcb_from_json("process_short.json", *p1)) {
-        loadJsonProgram("tasks_short.json", memManager, *p1, 0);
+    if (load_pcb_from_json("processes/process_quick.json", *p1)) {
+        loadJsonProgram("tasks/tasks_quick.json", memManager, *p1, 0);
         process_list.push_back(std::move(p1));
     }
 
-    // Processo 2: Long
+    // Processo 2: Short
     auto p2 = std::make_unique<PCB>();
-    if (load_pcb_from_json("process_long.json", *p2)) {
-        loadJsonProgram("tasks_long.json", memManager, *p2, 2048);
+    if (load_pcb_from_json("processes/process_short.json", *p2)) {
+        loadJsonProgram("tasks/tasks_short.json", memManager, *p2, 1024);
         process_list.push_back(std::move(p2));
     }
 
-    // Processo 3: CPU-Bound
+    // Processo 3: Medium
     auto p3 = std::make_unique<PCB>();
-    if (load_pcb_from_json("process_cpu_bound.json", *p3)) {
-        loadJsonProgram("tasks_cpu_bound.json", memManager, *p3, 4096);
+    if (load_pcb_from_json("processes/process_medium.json", *p3)) {
+        loadJsonProgram("tasks/tasks_medium.json", memManager, *p3, 2048);
         process_list.push_back(std::move(p3));
     }
 
-    // Processo 4: IO-Bound
+    // Processo 4: Long
     auto p4 = std::make_unique<PCB>();
-    if (load_pcb_from_json("process_io_bound.json", *p4)) {
-        loadJsonProgram("tasks_io_bound.json", memManager, *p4, 6144);
+    if (load_pcb_from_json("processes/process_long.json", *p4)) {
+        loadJsonProgram("tasks/tasks_long.json", memManager, *p4, 3072);
         process_list.push_back(std::move(p4));
+    }
+
+    // Processo 5: CPU-Bound
+    auto p5 = std::make_unique<PCB>();
+    if (load_pcb_from_json("processes/process_cpu_bound.json", *p5)) {
+        loadJsonProgram("tasks/tasks_cpu_bound.json", memManager, *p5, 4096);
+        process_list.push_back(std::move(p5));
+    }
+
+    // Processo 6: IO-Bound
+    auto p6 = std::make_unique<PCB>();
+    if (load_pcb_from_json("processes/process_io_bound.json", *p6)) {
+        loadJsonProgram("tasks/tasks_io_bound.json", memManager, *p6, 5120);
+        process_list.push_back(std::move(p6));
+    }
+
+    // Processo 7: Memory-Intensive
+    auto p7 = std::make_unique<PCB>();
+    if (load_pcb_from_json("processes/process_memory_intensive.json", *p7)) {
+        loadJsonProgram("tasks/tasks_memory_intensive.json", memManager, *p7, 6144);
+        process_list.push_back(std::move(p7));
+    }
+
+    // Processo 8: Balanced
+    auto p8 = std::make_unique<PCB>();
+    if (load_pcb_from_json("processes/process_balanced.json", *p8)) {
+        loadJsonProgram("tasks/tasks_balanced.json", memManager, *p8, 7168);
+        process_list.push_back(std::move(p8));
     }
     
     return process_list;
@@ -486,44 +514,84 @@ int main() {
     // 3. Carregamento dos Processos
     std::vector<std::unique_ptr<PCB>> process_list;
     
-    // Processo 1: Short
+    // Processo 1: Quick
     auto p1 = std::make_unique<PCB>();
-    if (load_pcb_from_json("process_short.json", *p1)) {
-        std::cout << "Carregando programa 'tasks_short.json' para o processo " << p1->pid << "...\n";
-        loadJsonProgram("tasks_short.json", memManager, *p1, 0);
+    if (load_pcb_from_json("processes/process_quick.json", *p1)) {
+        std::cout << "Carregando programa 'tasks_quick.json' para o processo " << p1->pid << "...\n";
+        loadJsonProgram("tasks/tasks_quick.json", memManager, *p1, 0);
         process_list.push_back(std::move(p1));
+    } else {
+        std::cerr << "Erro ao carregar 'process_quick.json'.\n";
+    }
+
+    // Processo 2: Short
+    auto p2 = std::make_unique<PCB>();
+    if (load_pcb_from_json("processes/process_short.json", *p2)) {
+        std::cout << "Carregando programa 'tasks_short.json' para o processo " << p2->pid << "...\n";
+        loadJsonProgram("tasks/tasks_short.json", memManager, *p2, 1024);
+        process_list.push_back(std::move(p2));
     } else {
         std::cerr << "Erro ao carregar 'process_short.json'.\n";
     }
 
-    // Processo 2: Long
-    auto p2 = std::make_unique<PCB>();
-    if (load_pcb_from_json("process_long.json", *p2)) {
-        std::cout << "Carregando programa 'tasks_long.json' para o processo " << p2->pid << "...\n";
-        loadJsonProgram("tasks_long.json", memManager, *p2, 2048);
-        process_list.push_back(std::move(p2));
+    // Processo 3: Medium
+    auto p3 = std::make_unique<PCB>();
+    if (load_pcb_from_json("processes/process_medium.json", *p3)) {
+        std::cout << "Carregando programa 'tasks_medium.json' para o processo " << p3->pid << "...\n";
+        loadJsonProgram("tasks/tasks_medium.json", memManager, *p3, 2048);
+        process_list.push_back(std::move(p3));
+    } else {
+        std::cerr << "Erro ao carregar 'process_medium.json'.\n";
+    }
+
+    // Processo 4: Long
+    auto p4 = std::make_unique<PCB>();
+    if (load_pcb_from_json("processes/process_long.json", *p4)) {
+        std::cout << "Carregando programa 'tasks_long.json' para o processo " << p4->pid << "...\n";
+        loadJsonProgram("tasks/tasks_long.json", memManager, *p4, 3072);
+        process_list.push_back(std::move(p4));
     } else {
         std::cerr << "Erro ao carregar 'process_long.json'.\n";
     }
 
-    // Processo 3: CPU-Bound
-    auto p3 = std::make_unique<PCB>();
-    if (load_pcb_from_json("process_cpu_bound.json", *p3)) {
-        std::cout << "Carregando programa 'tasks_cpu_bound.json' para o processo " << p3->pid << "...\n";
-        loadJsonProgram("tasks_cpu_bound.json", memManager, *p3, 4096);
-        process_list.push_back(std::move(p3));
+    // Processo 5: CPU-Bound
+    auto p5 = std::make_unique<PCB>();
+    if (load_pcb_from_json("processes/process_cpu_bound.json", *p5)) {
+        std::cout << "Carregando programa 'tasks_cpu_bound.json' para o processo " << p5->pid << "...\n";
+        loadJsonProgram("tasks/tasks_cpu_bound.json", memManager, *p5, 4096);
+        process_list.push_back(std::move(p5));
     } else {
         std::cerr << "Erro ao carregar 'process_cpu_bound.json'.\n";
     }
 
-    // Processo 4: IO-Bound
-    auto p4 = std::make_unique<PCB>();
-    if (load_pcb_from_json("process_io_bound.json", *p4)) {
-        std::cout << "Carregando programa 'tasks_io_bound.json' para o processo " << p4->pid << "...\n";
-        loadJsonProgram("tasks_io_bound.json", memManager, *p4, 6144);
-        process_list.push_back(std::move(p4));
+    // Processo 6: IO-Bound
+    auto p6 = std::make_unique<PCB>();
+    if (load_pcb_from_json("processes/process_io_bound.json", *p6)) {
+        std::cout << "Carregando programa 'tasks_io_bound.json' para o processo " << p6->pid << "...\n";
+        loadJsonProgram("tasks/tasks_io_bound.json", memManager, *p6, 5120);
+        process_list.push_back(std::move(p6));
     } else {
         std::cerr << "Erro ao carregar 'process_io_bound.json'.\n";
+    }
+
+    // Processo 7: Memory-Intensive
+    auto p7 = std::make_unique<PCB>();
+    if (load_pcb_from_json("processes/process_memory_intensive.json", *p7)) {
+        std::cout << "Carregando programa 'tasks_memory_intensive.json' para o processo " << p7->pid << "...\n";
+        loadJsonProgram("tasks/tasks_memory_intensive.json", memManager, *p7, 6144);
+        process_list.push_back(std::move(p7));
+    } else {
+        std::cerr << "Erro ao carregar 'process_memory_intensive.json'.\n";
+    }
+
+    // Processo 8: Balanced
+    auto p8 = std::make_unique<PCB>();
+    if (load_pcb_from_json("processes/process_balanced.json", *p8)) {
+        std::cout << "Carregando programa 'tasks_balanced.json' para o processo " << p8->pid << "...\n";
+        loadJsonProgram("tasks/tasks_balanced.json", memManager, *p8, 7168);
+        process_list.push_back(std::move(p8));
+    } else {
+        std::cerr << "Erro ao carregar 'process_balanced.json'.\n";
     }
 
     // Adiciona os processos ao escalonador

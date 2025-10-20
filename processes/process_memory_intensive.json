@@ -1,0 +1,6 @@
+{
+  "pid": 7,
+  "name": "Memory-Intensive Process",
+  "quantum": 120,
+  "priority": 2
+}
