@@ -5,6 +5,7 @@
 #include "../memory/MemoryManager.hpp"
 #include "PCB.hpp"
 #include "../IO/IOManager.hpp"
+#include "../memory/MemoryUsageTracker.hpp"
 
 #include <bitset>
 #include <cmath>
@@ -425,6 +426,13 @@ void* Core(MemoryManager &memoryManager, PCB &process, vector<unique_ptr<IOReque
 
     ControlContext context{ process.regBank, memoryManager, *ioRequests, printLock, process, counter, counterForEnd, endProgram, endExecution };
 
+    // Captura snapshot inicial
+    MemoryUsageTracker::recordSnapshot(process, 0, process.base_address);
+
+    // Intervalo para capturar snapshots (a cada 10 ciclos de pipeline)
+    const int SNAPSHOT_INTERVAL = 10;
+    int snapshot_counter = 0;
+
     while (context.counterForEnd > 0) {
         if (context.counter >= 4 && context.counterForEnd >= 1) {
             UC.Write_Back(UC.data[context.counter - 4], context);
@@ -448,6 +456,16 @@ void* Core(MemoryManager &memoryManager, PCB &process, vector<unique_ptr<IOReque
         clock += 1;
         account_pipeline_cycle(process);
 
+        // Capturar snapshot periodicamente
+        snapshot_counter++;
+        if (snapshot_counter >= SNAPSHOT_INTERVAL) {
+            // Estimar uso de cache (aproximação: hits + misses em uso)
+            uint64_t cache_usage = (process.cache_hits.load() + process.cache_misses.load()) * 4; // 4 bytes por entrada
+            uint64_t ram_usage = process.primary_mem_accesses.load() * 4; // 4 bytes por acesso
+            MemoryUsageTracker::recordSnapshot(process, cache_usage, ram_usage);
+            snapshot_counter = 0;
+        }
+
         if (clock >= process.quantum || context.endProgram == true) {
             context.endExecution = true;
         }
@@ -455,6 +473,11 @@ void* Core(MemoryManager &memoryManager, PCB &process, vector<unique_ptr<IOReque
             context.counterForEnd -= 1;
         }
     }
+
+    // Captura snapshot final
+    uint64_t final_cache_usage = (process.cache_hits.load() + process.cache_misses.load()) * 4;
+    uint64_t final_ram_usage = process.primary_mem_accesses.load() * 4;
+    MemoryUsageTracker::recordSnapshot(process, final_cache_usage, final_ram_usage);
 
     if (context.endProgram) {
         process.state = State::Finished;

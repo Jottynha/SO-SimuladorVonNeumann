@@ -1,9 +1,11 @@
 #include "MemoryManager.hpp"
+#include "cachePolicy.hpp"
 
 MemoryManager::MemoryManager(size_t mainMemorySize, size_t secondaryMemorySize) {
     mainMemory = std::make_unique<MAIN_MEMORY>(mainMemorySize);
     secondaryMemory = std::make_unique<SECONDARY_MEMORY>(secondaryMemorySize);
-    L1_cache = std::make_unique<Cache>();
+    // Inicializa com FIFO por padrão (pode ser mudado para LRU)
+    L1_cache = std::make_unique<Cache>(ReplacementPolicy::FIFO);
     mainMemoryLimit = mainMemorySize;
 }
 

@@ -1,6 +1,6 @@
 {
   "pid": 1,
   "name": "Quick Process",
-  "quantum": 50,
+  "quantum": 5,
   "priority": 1
 }

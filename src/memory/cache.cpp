@@ -2,7 +2,7 @@
 #include "cachePolicy.hpp"
 #include "MemoryManager.hpp" // Necessário para a lógica de write-back
 
-Cache::Cache() {
+Cache::Cache(ReplacementPolicy p) : policy(p) {
     this->capacity = CACHE_CAPACITY;
     this->cacheMap.reserve(CACHE_CAPACITY);
     this->cache_misses = 0;
@@ -16,6 +16,13 @@ Cache::~Cache() {
 size_t Cache::get(size_t address) {
     if (cacheMap.count(address) > 0 && cacheMap[address].isValid) {
         cache_hits++;
+        
+        // Se estamos usando LRU, atualizar a ordem de acesso
+        if (policy == ReplacementPolicy::LRU) {
+            CachePolicy cachepolicy(policy);
+            cachepolicy.updateLRU(lru_list, address);
+        }
+        
         return cacheMap[address].data; // Cache hit
     }
 
@@ -26,18 +33,21 @@ size_t Cache::get(size_t address) {
 void Cache::put(size_t address, size_t data, MemoryManager* memManager) {
     // Se a cache está cheia, precisamos remover um item
     if (cacheMap.size() >= capacity) {
-        CachePolicy cachepolicy;
-        // A política de remoção nos dirá qual endereço remover
-        size_t addr_to_remove = cachepolicy.getAddressToReplace(fifo_queue);
+        CachePolicy cachepolicy(policy);
+        size_t addr_to_remove = -1;
+        
+        // Escolher política de substituição
+        if (policy == ReplacementPolicy::FIFO) {
+            addr_to_remove = cachepolicy.getAddressToReplaceFIFO(fifo_queue);
+        } else if (policy == ReplacementPolicy::LRU) {
+            addr_to_remove = cachepolicy.getAddressToReplaceLRU(lru_list);
+        }
 
-        if (addr_to_remove != -1) {
+        if (addr_to_remove != static_cast<size_t>(-1)) {
             CacheEntry& entry_to_remove = cacheMap[addr_to_remove];
 
             // Lógica de WRITE-BACK: se o bloco a ser removido estiver sujo...
             if (entry_to_remove.isDirty) {
-                // ...escreve o dado de volta na memória usando o MemoryManager.
-                // Aqui passamos 'nullptr' para o PCB, pois a operação de write-back
-                // é do sistema de memória e não de um processo específico.
                 memManager->writeToFile(addr_to_remove, entry_to_remove.data);
             }
             // Remove da cache
@@ -52,7 +62,14 @@ void Cache::put(size_t address, size_t data, MemoryManager* memManager) {
     new_entry.isDirty = false; // Começa como "limpo"
 
     cacheMap[address] = new_entry;
-    fifo_queue.push(address); // Adiciona na fila do FIFO
+    
+    // Adiciona na estrutura de controle apropriada
+    if (policy == ReplacementPolicy::FIFO) {
+        fifo_queue.push(address);
+    } else if (policy == ReplacementPolicy::LRU) {
+        CachePolicy cachepolicy(policy);
+        cachepolicy.updateLRU(lru_list, address);
+    }
 }
 
 void Cache::update(size_t address, size_t data) {
@@ -74,16 +91,18 @@ void Cache::invalidate() {
     for (auto &c : cacheMap) {
         c.second.isValid = false;
     }
-    // Limpar a fila FIFO também, pois a cache foi invalidada
-    std::queue<size_t> empty;
-    fifo_queue.swap(empty);
+    // Limpar as estruturas de controle
+    std::queue<size_t> empty_queue;
+    fifo_queue.swap(empty_queue);
+    lru_list.clear();
 }
 
 void Cache::reset() {
     // Limpa completamente a cache (dados + estatísticas)
     cacheMap.clear();
-    std::queue<size_t> empty;
-    fifo_queue.swap(empty);
+    std::queue<size_t> empty_queue;
+    fifo_queue.swap(empty_queue);
+    lru_list.clear();
     cache_hits = 0;
     cache_misses = 0;
 }

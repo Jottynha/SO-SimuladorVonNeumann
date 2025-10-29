@@ -15,6 +15,8 @@
 #include "cpu/pcb_loader.hpp"
 #include "cpu/CONTROL_UNIT.hpp"
 #include "memory/MemoryManager.hpp"
+#include "memory/SegmentTable.hpp"
+#include "memory/MemoryUsageTracker.hpp"
 #include "parser_json/parser_json.hpp"
 #include "IO/IOManager.hpp"
 #include "cpu/Scheduler.hpp"
@@ -86,12 +88,24 @@ void print_metrics(const PCB& pcb, std::ofstream& outFile) {
     outFile << "Cache Misses:           " << pcb.cache_misses.load() << "\n";
     outFile << "Ciclos de IO:             " << pcb.io_cycles.load() << "\n";
     
+    // Snapshots de memória
+    outFile << "\n--- UTILIZACAO DE MEMORIA ---\n";
+    outFile << "Snapshots registrados:  " << pcb.memory_usage_timeline.size() << "\n";
+    if (!pcb.memory_usage_timeline.empty()) {
+        outFile << "Taxa de cache final:    " << std::fixed << std::setprecision(2) 
+                << pcb.memory_usage_timeline.back().cache_hit_rate << "%\n";
+    }
+    
     outFile << "\n--- LOG DE EXECUCAO ---\n";
     for (const auto& log_entry : pcb.execution_log) {
         outFile << log_entry << "\n";
     }
     
     outFile << "------------------------------------------\n";
+    
+    // Gerar relatório detalhado de utilização de memória
+    std::string memory_report_file = "output/memory_usage_" + pcb.name + "_" + std::to_string(pcb.pid) + ".txt";
+    MemoryUsageTracker::generateReport(pcb, memory_report_file);
 }
 
 
@@ -153,6 +167,22 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager) {
     if (load_pcb_from_json("processes/process_balanced.json", *p8)) {
         loadJsonProgram("tasks/tasks_balanced.json", memManager, *p8, 7168);
         process_list.push_back(std::move(p8));
+    }
+
+    std::cout << "[DEBUG] Tentando carregar processo 9...\n";
+    
+    // Processo 9: Loop-Heavy (para demonstrar preempção)
+    auto p9 = std::make_unique<PCB>();
+    std::cout << "[DEBUG] Criado unique_ptr p9\n";
+    bool loaded = load_pcb_from_json("processes/process_loop_heavy.json", *p9);
+    std::cout << "[DEBUG] load_pcb_from_json retornou: " << (loaded ? "true" : "false") << "\n";
+    if (loaded) {
+        std::cout << "Carregando programa 'tasks_loop_heavy.json' para o processo " << p9->pid << "...\n";
+        loadJsonProgram("tasks/tasks_loop_heavy.json", memManager, *p9, 8192);
+        process_list.push_back(std::move(p9));
+        std::cout << "[DEBUG] Processo 9 adicionado à lista\n";
+    } else {
+        std::cerr << "Erro ao carregar 'process_loop_heavy.json'.\n";
     }
     
     // Registrar tempo de chegada de todos os processos
@@ -1194,6 +1224,14 @@ int main() {
 
     std::cout << "\nSimulação finalizada. Resultados salvos em 'output/resultados.dat'.\n";
     results_file.close();
+    
+    // Gerar relatório agregado de utilização de memória
+    std::vector<PCB*> all_processes;
+    for (const auto& process : process_list) {
+        all_processes.push_back(process.get());
+    }
+    MemoryUsageTracker::generateAggregatedReport(all_processes, "output/memory_aggregated_report.txt");
+    std::cout << "Relatório agregado de memória salvo em 'output/memory_aggregated_report.txt'.\n";
     
     return 0;
 }

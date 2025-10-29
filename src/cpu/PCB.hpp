@@ -32,7 +32,7 @@ struct MemWeights {
 struct PCB {
     int pid = 0;
     std::string name;
-    int quantum = 10; // Valor padrão para quantum
+    int quantum = 5; // Valor padrão para quantum (reduzido para demonstrar preempção)
     int priority = 0;
     size_t base_address = 0; // Endereço base do processo na memória
 
@@ -73,6 +73,16 @@ struct PCB {
     uint64_t turnaround_time_ms = 0;  // Tempo de retorno (turnaround)
     uint64_t response_time_ms = 0;    // Tempo de resposta
     bool first_run = true;             // Indica se é a primeira execução
+
+    // Rastreamento de utilização de memória ao longo do tempo
+    struct MemorySnapshot {
+        std::chrono::time_point<std::chrono::high_resolution_clock> timestamp;
+        uint64_t cache_usage;      // Bytes em uso na cache
+        uint64_t ram_usage;        // Bytes em uso na RAM
+        uint64_t total_accesses;   // Total de acessos até o momento
+        double cache_hit_rate;     // Taxa de hit da cache no momento
+    };
+    std::vector<MemorySnapshot> memory_usage_timeline;
 
     MemWeights memWeights;
 
