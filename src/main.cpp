@@ -113,6 +113,8 @@ void print_metrics(const PCB& pcb, std::ofstream& outFile) {
 std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager) {
     std::vector<std::unique_ptr<PCB>> process_list;
     
+    std::cout << "\n[LOAD_PROCESSES] Iniciando carregamento de processos...\n";
+    
     // Processo 1: Quick
     auto p1 = std::make_unique<PCB>();
     if (load_pcb_from_json("processes/process_quick.json", *p1)) {
@@ -1138,6 +1140,16 @@ int main() {
         process_list.push_back(std::move(p8));
     } else {
         std::cerr << "Erro ao carregar 'process_balanced.json'.\n";
+    }
+
+    // Processo 9: Loop-Heavy (para demonstrar preempção)
+    auto p9 = std::make_unique<PCB>();
+    if (load_pcb_from_json("processes/process_loop_heavy.json", *p9)) {
+        std::cout << "Carregando programa 'tasks_loop_heavy.json' para o processo " << p9->pid << "...\n";
+        loadJsonProgram("tasks/tasks_loop_heavy.json", memManager, *p9, 8192);
+        process_list.push_back(std::move(p9));
+    } else {
+        std::cerr << "Erro ao carregar 'process_loop_heavy.json'.\n";
     }
 
     // Adiciona os processos ao escalonador

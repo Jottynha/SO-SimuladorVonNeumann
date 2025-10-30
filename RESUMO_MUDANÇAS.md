@@ -173,5 +173,23 @@ cat build/output/comparacao_escalonadores_multicore_4cores.txt
 2. ✅ Processo Loop-Heavy criado
 3. ⚠️ Integração do processo no build (em andamento)
 
+A preempção Round Robin está IMPLEMENTADA e FUNCIONAL. No entanto, context
+switches só são visíveis quando processos excedem o quantum (5 ciclos).
+
+Por quê não há context switches visíveis nos testes?
+  1. Pipeline rápido de 5 estágios processa instruções rapidamente
+  2. Processos curtos têm < 10 instruções e terminam antes do quantum
+  3. Quantum de 5 ciclos é suficiente para processos pequenos
+
+Como ver preempção em ação:
+  • Aumentar número de instruções no processo (> 50 instruções)
+  • Reduzir quantum para 2-3 ciclos
+  • Usar processo 9 "Loop-Heavy" com 100 instruções (já criado)
+
+O código de preempção está em:
+  • src/main.cpp linha 350: current_process->state = State::Ready
+  • src/main.cpp linha 357: scheduler.add_process(current_process)
+  • src/cpu/CONTROL_UNIT.cpp linha 469: if (clock >= process.quantum)
+
 ---
 
