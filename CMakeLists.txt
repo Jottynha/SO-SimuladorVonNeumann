@@ -94,6 +94,11 @@ add_custom_target(check
     COMMENT "🎯 Executando verificações rápidas..."
     VERBATIM
 )
+add_custom_target(plots
+    COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/generate_all_plots.sh
+    COMMENT "📊 Gerando gráficos dos resultados..."
+    VERBATIM
+)
 add_custom_target(ajuda
     COMMAND ${CMAKE_COMMAND} -E echo "📋 SO-SimuladorVonNeumann - Comandos Disponíveis:"
     COMMAND ${CMAKE_COMMAND} -E echo ""
@@ -102,6 +107,7 @@ add_custom_target(ajuda
     COMMAND ${CMAKE_COMMAND} -E echo "  make run               - Compila se necessário e executa o simulador"
     COMMAND ${CMAKE_COMMAND} -E echo "  make test-all          - Compila e executa todos os testes"
     COMMAND ${CMAKE_COMMAND} -E echo "  make check             - Verificação rápida de todos os componentes (PASSOU/FALHOU)"
+    COMMAND ${CMAKE_COMMAND} -E echo "  make plots             - Gera gráficos dos resultados (requer matplotlib)"
     COMMAND ${CMAKE_COMMAND} -E echo "  make clean             - Remove todos os arquivos gerados pelo build"
     COMMAND ${CMAKE_COMMAND} -E echo "  make ajuda             - Mostra esta mensagem de ajuda"
     COMMAND ${CMAKE_COMMAND} -E echo ""
