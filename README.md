@@ -855,7 +855,575 @@ O `CMakeLists.txt` foi configurado para criar atalhos úteis que você pode usar
 | `make check`    | Fornece uma saída simplificada indicando se cada teste passou ou falhou. |
 | `make ajuda`    | Exibe uma lista com todos os comandos disponíveis.                   |
 | `make clean`    | Remove todos os arquivos gerados pela compilação.                    |
+| `make plots`    | Gera todos os gráficos de visualização (requer Python/matplotlib).  |
 
+---
+
+## Personalização e Configuração para Testes
+
+<div align="justify">
+
+Esta seção descreve **como personalizar o simulador** para realizar experimentos e testes customizados. O sistema foi projetado para ser altamente configurável através de arquivos JSON e parâmetros de código.
+
+### [1] Configuração de Processos (PCB)
+
+**Localização:** `processes/process_*.json`
+
+Cada processo é definido por um arquivo JSON que controla seu comportamento no escalonador.
+
+**Exemplo de Estrutura:**
+
+```json
+{
+  "pid": 1,
+  "name": "Meu Processo Teste",
+  "priority": 3,
+  "quantum": 10,
+  "arrival_time": 0,
+  "memWeights": {
+    "cache": 1,
+    "main": 5,
+    "secondary": 10
+  }
+}
+```
+
+**Parâmetros Configuráveis:**
+
+| Parâmetro | Tipo | Descrição | Valores Recomendados |
+|-----------|------|-----------|----------------------|
+| `pid` | int | Identificador único do processo | 1-99 |
+| `name` | string | Nome descritivo do processo | Qualquer string |
+| `priority` | int | Prioridade (maior = mais prioritário) | 1-5 (1=alta, 5=baixa) |
+| `quantum` | int | Quantum para Round Robin (ciclos) | 5-20 ciclos |
+| `arrival_time` | int | Tempo de chegada (ms) | 0 ou mais |
+| `memWeights.cache` | int | Custo em ciclos para acesso à cache | 1 (padrão) |
+| `memWeights.main` | int | Custo em ciclos para acesso à RAM | 5-10 |
+| `memWeights.secondary` | int | Custo em ciclos para acesso ao swap | 10-100 |
+
+**Como Criar Novos Processos:**
+
+1. Copie um arquivo existente: `cp processes/process_quick.json processes/process_meu_teste.json`
+2. Edite os campos conforme necessário
+3. Crie o arquivo de tarefas correspondente (veja seção 2)
+4. Recompile e execute: `cd build && make run`
+
+**Experimentos Sugeridos Pelos Autores:**
+- **Teste de Prioridade**: Crie processos com prioridades diferentes (1, 3, 5) e observe o comportamento no escalonador Priority
+- **Teste de Quantum**: Varie o quantum (5, 10, 20) e analise o número de context switches no Round Robin
+- **Teste de Carga de Memória**: Ajuste `memWeights` para simular processos memory-intensive vs CPU-intensive
+
+---
+
+### [2] Programação de Tarefas (Assembly MIPS)
+
+**Localização:** `tasks/tasks_*.json`
+
+Define o **programa em assembly MIPS** que cada processo executará.
+
+**Exemplo de Estrutura:**
+
+```json
+{
+  "program": [
+    { "instruction": "li", "rt": "$t0", "immediate": 100 },
+    { "instruction": "li", "rt": "$t1", "immediate": 200 },
+    { "instruction": "add", "rd": "$t2", "rs": "$t0", "rt": "$t1" },
+    { "instruction": "print", "rt": "$t2" },
+    { "instruction": "end" }
+  ]
+}
+```
+
+**Instruções Suportadas:**
+
+| Instrução | Formato | Descrição | Exemplo |
+|-----------|---------|-----------|---------|
+| `li` | Load Immediate | Carrega imediato em registrador | `{ "instruction": "li", "rt": "$t0", "immediate": 42 }` |
+| `add` | Soma | Soma dois registradores | `{ "instruction": "add", "rd": "$t0", "rs": "$t1", "rt": "$t2" }` |
+| `sub` | Subtração | Subtrai dois registradores | `{ "instruction": "sub", "rd": "$t0", "rs": "$t1", "rt": "$t2" }` |
+| `mul` | Multiplicação | Multiplica dois registradores | `{ "instruction": "mul", "rd": "$t0", "rs": "$t1", "rt": "$t2" }` |
+| `div` | Divisão | Divide dois registradores | `{ "instruction": "div", "rd": "$t0", "rs": "$t1", "rt": "$t2" }` |
+| `lw` | Load Word | Carrega palavra da memória | `{ "instruction": "lw", "rt": "$t0", "rs": "$t1", "immediate": 0 }` |
+| `sw` | Store Word | Armazena palavra na memória | `{ "instruction": "sw", "rt": "$t0", "rs": "$t1", "immediate": 0 }` |
+| `beq` | Branch if Equal | Salto condicional se igual | `{ "instruction": "beq", "rs": "$t0", "rt": "$t1", "label": 10 }` |
+| `bne` | Branch if Not Equal | Salto condicional se diferente | `{ "instruction": "bne", "rs": "$t0", "rt": "$t1", "label": 10 }` |
+| `j` | Jump | Salto incondicional | `{ "instruction": "j", "label": 5 }` |
+| `print` | Print | Imprime valor (I/O) | `{ "instruction": "print", "rt": "$t0" }` |
+| `end` | End | Finaliza programa | `{ "instruction": "end" }` |
+
+**Registradores Disponíveis:**
+
+- **Temporários**: `$t0` a `$t9` (10 registradores)
+- **Salvos**: `$s0` a `$s7` (8 registradores)
+- **Argumentos**: `$a0` a `$a3` (4 registradores)
+- **Resultados**: `$v0` a `$v1` (2 registradores)
+- **Zero**: `$zero` (sempre 0, read-only)
+
+**Criando Programas Customizados:**
+
+```bash
+# Copiar template
+cp tasks/tasks_quick.json tasks/tasks_meu_programa.json
+# Editar com seu editor favorito
+nano tasks/tasks_meu_programa.json
+```
+
+**Exemplos de Programas:**
+**a) Loop Simples (10 iterações):**
+```json
+{
+  "program": [
+    { "instruction": "li", "rt": "$t0", "immediate": 0 },
+    { "instruction": "li", "rt": "$t1", "immediate": 10 },
+    { "instruction": "add", "rd": "$t0", "rs": "$t0", "immediate": 1 },
+    { "instruction": "bne", "rs": "$t0", "rt": "$t1", "label": 2 },
+    { "instruction": "end" }
+  ]
+}
+```
+**b) Acesso Intensivo à Memória:**
+```json
+{
+  "program": [
+    { "instruction": "li", "rt": "$t0", "immediate": 100 },
+    { "instruction": "sw", "rt": "$t0", "rs": "$zero", "immediate": 0 },
+    { "instruction": "lw", "rt": "$t1", "rs": "$zero", "immediate": 0 },
+    { "instruction": "sw", "rt": "$t1", "rs": "$zero", "immediate": 4 },
+    { "instruction": "lw", "rt": "$t2", "rs": "$zero", "immediate": 4 },
+    { "instruction": "end" }
+  ]
+}
+```
+**c) Operações Aritméticas Intensivas (CPU-Bound):**
+```json
+{
+  "program": [
+    { "instruction": "li", "rt": "$t0", "immediate": 1000 },
+    { "instruction": "li", "rt": "$t1", "immediate": 500 },
+    { "instruction": "add", "rd": "$t2", "rs": "$t0", "rt": "$t1" },
+    { "instruction": "mul", "rd": "$t3", "rs": "$t2", "rt": "$t0" },
+    { "instruction": "div", "rd": "$t4", "rs": "$t3", "rt": "$t1" },
+    { "instruction": "sub", "rd": "$t5", "rs": "$t4", "rt": "$t0" },
+    { "instruction": "end" }
+  ]
+}
+```
+---
+
+### [3] Configuração do Sistema (src/main.cpp)
+
+**Localização:** `src/main.cpp`
+
+Parâmetros globais do sistema podem ser alterados diretamente no código-fonte.
+
+**Parâmetros Principais:**
+
+```cpp
+// Linha ~50-70: Configuração do sistema
+const int NUM_CORES = 4;              // Número de cores (1-8)
+const int CACHE_SIZE = 256;           // Tamanho da cache em blocos (64-1024)
+const int SNAPSHOT_INTERVAL = 10;     // Intervalo de snapshots em ciclos (5-50)
+// Linha ~100-120: Configuração de memória
+const size_t RAM_SIZE = 4096;         // Tamanho da RAM em blocos (1024-8192)
+const int CACHE_HIT_LATENCY = 1;      // Latência da cache em ciclos (1)
+const int RAM_LATENCY = 5;            // Latência da RAM em ciclos (5-10)
+const int SWAP_LATENCY = 10;          // Latência do swap em ciclos (10-100)
+// Linha ~150-170: Configuração de escalonamento
+SchedulingPolicy policy = ROUND_ROBIN;  // FCFS, SJN, PRIORITY, ROUND_ROBIN
+const int DEFAULT_QUANTUM = 5;        // Quantum padrão para RR (5-20)
+```
+
+**Como Alterar:**
+
+1. Abra o arquivo: `nano src/main.cpp`
+2. Localize a seção de configuração (busque por "CONFIG" ou os valores acima)
+3. Modifique os valores conforme necessário
+4. Recompile: `cd build && cmake .. && make`
+5. Execute: `./simulador`
+
+**Experimentos Recomendados:**
+
+| Parâmetro | Teste | Objetivo |
+|-----------|-------|----------|
+| `NUM_CORES` | Variar 1, 2, 4, 8 | Análise de speedup multicore |
+| `CACHE_SIZE` | Variar 64, 128, 256, 512 | Impacto do tamanho da cache na taxa de hit |
+| `DEFAULT_QUANTUM` | Variar 5, 10, 20 | Overhead de context switch vs interatividade |
+| `RAM_LATENCY` | Variar 5, 10, 20 | Impacto da latência de memória no desempenho |
+
+---
+
+### [4] Políticas de Escalonamento (src/cpu/Scheduler.cpp)
+
+**Localização:** `src/cpu/Scheduler.cpp`
+
+**Como Alternar Entre Políticas:**
+
+**Opção 1: Via Código (src/main.cpp)**
+
+```cpp
+// Linha ~160
+// Altere o enum para a política desejada:
+SchedulingPolicy policy = FCFS;          // First-Come, First-Served
+// SchedulingPolicy policy = SJN;        // Shortest Job Next
+// SchedulingPolicy policy = PRIORITY;   // Baseado em prioridade
+// SchedulingPolicy policy = ROUND_ROBIN; // Round Robin (preemptivo)
+```
+
+**Opção 2: Via Interface do Simulador**
+
+Quando executar o simulador, você verá um menu:
+
+```
+Selecione a política de escalonamento:
+1. FCFS (First-Come, First-Served)
+2. SJN (Shortest Job Next)
+3. Priority (Baseado em Prioridade)
+4. Round Robin (Preemptivo)
+Escolha (1-4): _
+```
+
+**Modificando Algoritmos de Escalonamento:**
+
+Para criar uma **nova política de escalonamento customizada**:
+
+1. Abra `src/cpu/Scheduler.cpp`
+2. Adicione um novo método:
+
+```cpp
+// Adicione após linha ~200
+PCB* Scheduler::select_process_CUSTOM() {
+    if (ready_queue.empty()) return nullptr;
+    
+    // Seu algoritmo customizado aqui
+    // Exemplo: seleciona processo com menor PID
+    PCB* selected = ready_queue[0];
+    for (auto* process : ready_queue) {
+        if (process->pid < selected->pid) {
+            selected = process;
+        }
+    }
+    
+    // Remove da fila e retorna
+    ready_queue.erase(
+        std::remove(ready_queue.begin(), ready_queue.end(), selected),
+        ready_queue.end()
+    );
+    
+    return selected;
+}
+```
+
+3. Adicione no enum (em `Scheduler.hpp`):
+
+```cpp
+enum SchedulingPolicy {
+    FCFS,
+    SJN,
+    PRIORITY,
+    ROUND_ROBIN,
+    CUSTOM        // Sua nova política
+};
+```
+
+4. Integre no dispatcher (em `Scheduler.cpp`, método `select_process`):
+
+```cpp
+PCB* Scheduler::select_process() {
+    switch (policy) {
+        case FCFS:        return select_process_FCFS();
+        case SJN:         return select_process_SJN();
+        case PRIORITY:    return select_process_Priority();
+        case ROUND_ROBIN: return select_process_RoundRobin();
+        case CUSTOM:      return select_process_CUSTOM();  // Nova linha
+        default:          return nullptr;
+    }
+}
+```
+
+---
+
+### [5] Políticas de Cache (src/memory/cachePolicy.cpp)
+
+**Localização:** `src/memory/cachePolicy.cpp` e `src/memory/Cache.cpp`
+
+**Como Alternar Entre FIFO e LRU:**
+
+```cpp
+// Em src/main.cpp, linha ~110
+Cache cache(CACHE_SIZE, ReplacementPolicy::FIFO);  // FIFO
+// Cache cache(CACHE_SIZE, ReplacementPolicy::LRU); // LRU
+```
+
+**Implementando Nova Política de Substituição:**
+
+Exemplo: **Política RANDOM (aleatória)**
+
+1. Adicione no enum (`src/memory/cachePolicy.hpp`):
+
+```cpp
+enum class ReplacementPolicy {
+    FIFO,
+    LRU,
+    RANDOM    // Nova política
+};
+```
+
+2. Implemente o algoritmo (`src/memory/cachePolicy.cpp`):
+
+```cpp
+size_t CachePolicy::getAddressToReplace_RANDOM(
+    const std::unordered_map<size_t, CacheEntry>& cache_data
+) {
+    if (cache_data.empty()) return -1;
+    
+    // Gera índice aleatório
+    size_t random_index = rand() % cache_data.size();
+    
+    // Itera até o índice aleatório
+    auto it = cache_data.begin();
+    std::advance(it, random_index);
+    
+    return it->first;  // Retorna endereço aleatório
+}
+```
+
+3. Integre na classe Cache (`src/memory/Cache.cpp`):
+
+```cpp
+void Cache::put(size_t address, size_t data, MemoryManager* memManager) {
+    if (cache_data.size() >= capacity) {
+        size_t victim_addr;
+        
+        switch (policy) {
+            case ReplacementPolicy::FIFO:
+                victim_addr = cachePolicy.getAddressToReplace(fifo_queue);
+                break;
+            case ReplacementPolicy::LRU:
+                victim_addr = cachePolicy.getAddressToReplace_LRU(lru_list);
+                break;
+            case ReplacementPolicy::RANDOM:
+                victim_addr = cachePolicy.getAddressToReplace_RANDOM(cache_data);
+                break;
+        }
+        
+        // Remove vítima...
+    }
+}
+```
+
+---
+
+### [6] Hierarquia de Memória (src/memory/)
+
+**Localização:** `src/memory/MAIN_MEMORY.cpp`, `SECONDARY_MEMORY.cpp`
+
+**Alterando Tamanhos de Memória:**
+
+```cpp
+// Em src/memory/MAIN_MEMORY.hpp, linha ~15
+#define MAX_MEMORY_SIZE 4096        // RAM: 4096 blocos × 4 bytes = 16 KB
+#define MEMORY_ACCESS_ERROR 0xDEADBEEF
+
+// Em src/memory/SECONDARY_MEMORY.hpp, linha ~15
+#define MAX_SECONDARY_MEMORY_SIZE 1000000  // Swap: ~4 MB
+```
+
+**Experimento: Simular Sistemas com Pouca Memória**
+
+Reduza os valores para forçar mais swaps:
+
+```cpp
+#define MAX_MEMORY_SIZE 1024        // Apenas 4 KB de RAM
+#define MAX_SECONDARY_MEMORY_SIZE 10000  // Swap limitado
+```
+
+Recompile e observe o aumento de acessos ao swap nos relatórios.
+
+---
+
+### [7] Ajustando Latências de Memória
+
+**Localização:** `src/memory/MemoryManager.cpp`
+
+```cpp
+// Linha ~50-70
+const int CACHE_LATENCY = 1;      // Ciclos para acesso à cache
+const int RAM_LATENCY = 5;        // Ciclos para acesso à RAM
+const int SWAP_LATENCY = 10;      // Ciclos para acesso ao swap
+
+// No método de acesso:
+uint32_t MemoryManager::read(uint32_t address, PCB& process) {
+    // Tenta cache primeiro
+    uint32_t value = cache.get(address);
+    if (value != CACHE_MISS) {
+        process.memory_cycles += CACHE_LATENCY;  // <-- Altere aqui
+        process.cache_hits++;
+        return value;
+    }
+    
+    // Cache miss: tenta RAM
+    value = ram.ReadMem(address);
+    if (value != MEMORY_ACCESS_ERROR) {
+        process.memory_cycles += RAM_LATENCY;    // <-- Altere aqui
+        cache.put(address, value, this);
+        return value;
+    }
+    
+    // RAM miss: vai para swap
+    value = swap.ReadMem(address);
+    process.memory_cycles += SWAP_LATENCY;       // <-- Altere aqui
+    return value;
+}
+```
+
+**Experimento Sugerido:**
+
+Simule um sistema com memória lenta:
+- `CACHE_LATENCY = 1`
+- `RAM_LATENCY = 20` (4x mais lento)
+- `SWAP_LATENCY = 100` (10x mais lento)
+
+Observe como isso afeta o tempo total de execução dos processos.
+
+---
+
+### [8] Snapshots de Memória (Intervalo de Captura)
+
+**Localização:** `src/cpu/CONTROL_UNIT.cpp`
+
+```cpp
+// Linha ~400
+const int SNAPSHOT_INTERVAL = 10;  // Captura a cada 10 ciclos
+
+// No loop de execução:
+snapshot_counter++;
+if (snapshot_counter >= SNAPSHOT_INTERVAL) {  // <-- Altere SNAPSHOT_INTERVAL
+    MemoryUsageTracker::recordSnapshot(process, cache_usage, ram_usage);
+    snapshot_counter = 0;
+}
+```
+
+**Granularidade Recomendada:**
+
+| Intervalo | Uso | Overhead | Detalhamento |
+|-----------|-----|----------|--------------|
+| 1 ciclo | Debug detalhado | Alto | Máximo |
+| 5 ciclos | Análise fina | Médio | Alto |
+| 10 ciclos | **Padrão** (recomendado) | Baixo | Bom |
+| 20 ciclos | Análise geral | Muito baixo | Moderado |
+| 50 ciclos | Overview | Mínimo | Baixo |
+
+---
+
+### [9] Gerando Relatórios Customizados
+
+**Localização:** `src/memory/MemoryUsageTracker.cpp`
+
+**Adicionando Novas Métricas aos Relatórios:**
+
+Exemplo: adicionar "Taxa de Swap" ao relatório agregado:
+
+```cpp
+// Em MemoryUsageTracker::generateAggregatedReport, linha ~150
+void MemoryUsageTracker::generateAggregatedReport(...) {
+    // ...existing code...
+    
+    // Adicione após linha de cache hit rate média:
+    uint64_t total_swap_accesses = 0;
+    uint64_t total_accesses = 0;
+    
+    for (const auto& process : processes) {
+        total_swap_accesses += process->secondary_mem_accesses;
+        total_accesses += process->total_memory_accesses;
+    }
+    
+    double swap_rate = (total_accesses > 0) 
+        ? (static_cast<double>(total_swap_accesses) / total_accesses) * 100.0 
+        : 0.0;
+    
+    report << "Taxa de swap media: " << swap_rate << "%\n";
+    
+    // ...existing code...
+}
+```
+
+---
+
+### [10] Visualização de Dados (scripts Python)
+
+**Localização:** `scripts/`
+
+**Personalizando Gráficos:**
+
+**a) Adicionar novo tipo de gráfico (`scripts/plot_results.py`):**
+
+```python
+# Adicione após linha ~180
+def plot_custom_metric(data):
+    """Plota métrica customizada"""
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(figsize=(10, 6))
+    # Exemplo: gráfico de dispersão PID vs Cache Hit Rate
+    pids = [p['pid'] for p in data]
+    hit_rates = [p['cache_hit_rate'] for p in data]
+    ax.scatter(pids, hit_rates, s=100, alpha=0.6)
+    ax.set_xlabel('Process ID')
+    ax.set_ylabel('Cache Hit Rate (%)')
+    ax.set_title('Cache Hit Rate por Processo')
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig('../plots/custom_metric.png', dpi=300)
+    plt.close()
+    print("Gráfico customizado gerado: custom_metric.png")
+# Chame a função no main:
+if __name__ == '__main__':
+    data = load_data()
+    plot_custom_metric(data)
+```
+
+**b) Modificar cores e estilos:**
+
+```python
+# Em qualquer script, modifique paletas de cores:
+import matplotlib.pyplot as plt
+
+# Paleta padrão
+colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A']
+
+# Paleta customizada (ex: tons de azul)
+colors = ['#1E3A8A', '#3B82F6', '#60A5FA', '#93C5FD']
+
+# Use em seus plots:
+ax.bar(x, y, color=colors)
+```
+
+**c) Gerar todos os gráficos de uma vez:**
+
+```bash
+# No diretório raiz do projeto
+cd build
+make plots
+
+# Ou diretamente:
+python3 ../scripts/plot_results.py
+python3 ../scripts/plot_memory.py
+python3 ../scripts/compare_schedulers.py
+```
+
+---
+
+### Dicas Importantes
+
+1. **Sempre recompile após alterações:** `cd build && make`
+2. **Faça backup dos resultados:** `cp -r build/output/ resultados_experimento_X/`
+3. **Use Git para versionar configurações:** `git commit -am "Experimento: 8 cores"`
+4. **Documente seus testes:** Crie um arquivo `EXPERIMENTOS.md` com suas observações
+5. **Valide resultados:** Execute múltiplas vezes para garantir reprodutibilidade
+
+</div>
+
+---
 
 ## Colaboradores
 
