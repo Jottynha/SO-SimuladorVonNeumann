@@ -9,6 +9,9 @@
 #include <ctime>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <string>
+#include <algorithm>
+#include <map>
 
 
 #include "cpu/PCB.hpp"
@@ -20,6 +23,103 @@
 #include "parser_json/parser_json.hpp"
 #include "IO/IOManager.hpp"
 #include "cpu/Scheduler.hpp"
+
+// ==================== ESTRUTURAS PARA LINHA DE COMANDO ====================
+
+struct CommandLineConfig {
+    std::string config_dir = "processes";
+    std::string tasks_dir = "tasks";
+    std::string output_dir = "output";
+    int cores = 1;
+    std::string replacement_policy = "FIFO";  // FIFO ou LRU
+    std::string scheduler = "FCFS";            // FCFS, SJN, Priority, RR
+    int quantum = 5;
+    bool interactive_mode = true;             // Se true, usa menu interativo
+    bool help = false;
+};
+
+// Função para exibir ajuda
+void print_help(const char* program_name) {
+    std::cout << "Uso: " << program_name << " [opções]\n\n";
+    std::cout << "Opções:\n";
+    std::cout << "  --config <dir>       Diretório dos arquivos PCB (padrão: processes)\n";
+    std::cout << "  --tasks <dir>        Diretório dos arquivos de tarefas (padrão: tasks)\n";
+    std::cout << "  --output <dir>       Diretório de saída (padrão: output)\n";
+    std::cout << "  --cores <n>          Número de cores 1-8 (padrão: 1)\n";
+    std::cout << "  --replacement <pol>  Política de substituição: FIFO ou LRU (padrão: FIFO)\n";
+    std::cout << "  --scheduler <alg>    Algoritmo: FCFS, SJN, Priority, RR (padrão: FCFS)\n";
+    std::cout << "  --quantum <n>        Quantum para Round Robin (padrão: 5)\n";
+    std::cout << "  --help, -h           Mostra esta ajuda\n\n";
+    std::cout << "Exemplos:\n";
+    std::cout << "  " << program_name << "\n";
+    std::cout << "    (modo interativo)\n\n";
+    std::cout << "  " << program_name << " --cores 4 --scheduler RR --quantum 10\n";
+    std::cout << "    (4 cores, Round Robin, quantum 10)\n\n";
+    std::cout << "  " << program_name << " --config build/processes/ --tasks build/tasks/ \\\n";
+    std::cout << "    --cores 4 --replacement LRU --scheduler RR --quantum 5 \\\n";
+    std::cout << "    --output build/output/\n";
+    std::cout << "    (configuração completa via linha de comando)\n\n";
+}
+
+// Parser de argumentos da linha de comando
+CommandLineConfig parse_arguments(int argc, char* argv[]) {
+    CommandLineConfig config;
+    
+    // Se não há argumentos, usa modo interativo
+    if (argc == 1) {
+        return config;
+    }
+    
+    for (int i = 1; i < argc; i++) {
+        std::string arg = argv[i];
+        
+        if (arg == "--help" || arg == "-h") {
+            config.help = true;
+            return config;
+        }
+        else if (arg == "--config" && i + 1 < argc) {
+            config.config_dir = argv[++i];
+            config.interactive_mode = false;
+        }
+        else if (arg == "--tasks" && i + 1 < argc) {
+            config.tasks_dir = argv[++i];
+            config.interactive_mode = false;
+        }
+        else if (arg == "--output" && i + 1 < argc) {
+            config.output_dir = argv[++i];
+            config.interactive_mode = false;
+        }
+        else if (arg == "--cores" && i + 1 < argc) {
+            config.cores = std::stoi(argv[++i]);
+            config.interactive_mode = false;
+        }
+        else if (arg == "--replacement" && i + 1 < argc) {
+            config.replacement_policy = argv[++i];
+            std::transform(config.replacement_policy.begin(), 
+                         config.replacement_policy.end(), 
+                         config.replacement_policy.begin(), ::toupper);
+            config.interactive_mode = false;
+        }
+        else if (arg == "--scheduler" && i + 1 < argc) {
+            config.scheduler = argv[++i];
+            std::transform(config.scheduler.begin(), 
+                         config.scheduler.end(), 
+                         config.scheduler.begin(), ::toupper);
+            config.interactive_mode = false;
+        }
+        else if (arg == "--quantum" && i + 1 < argc) {
+            config.quantum = std::stoi(argv[++i]);
+            config.interactive_mode = false;
+        }
+        else {
+            std::cerr << "Argumento desconhecido: " << arg << "\n";
+            std::cerr << "Use --help para ver a lista de opções.\n";
+            exit(1);
+        }
+    }
+    
+    return config;
+}
 
 // Função auxiliar para criar diretório
 inline void create_output_directory() {
@@ -110,82 +210,127 @@ void print_metrics(const PCB& pcb, std::ofstream& outFile) {
 
 
 // Função auxiliar para carregar processos
-std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager) {
+std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager, 
+                                                  const std::string& config_dir = "processes",
+                                                  const std::string& tasks_dir = "tasks") {
     std::vector<std::unique_ptr<PCB>> process_list;
     
     std::cout << "\n[LOAD_PROCESSES] Iniciando carregamento de processos...\n";
+    std::cout << "   Config Dir: " << config_dir << "\n";
+    std::cout << "   Tasks Dir:  " << tasks_dir << "\n\n";
+    
+    int loaded_count = 0;
     
     // Processo 1: Quick
+    std::cout << "   [1/9] Carregando Quick Process... ";
     auto p1 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_quick.json", *p1)) {
-        loadJsonProgram("tasks/tasks_quick.json", memManager, *p1, 0);
+    if (load_pcb_from_json(config_dir + "/process_quick.json", *p1)) {
+        loadJsonProgram(tasks_dir + "/tasks_quick.json", memManager, *p1, 0);
         process_list.push_back(std::move(p1));
+        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        loaded_count++;
+    } else {
+        std::cout << "❌ Falhou\n";
     }
 
     // Processo 2: Short
+    std::cout << "   [2/9] Carregando Short Process... ";
     auto p2 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_short.json", *p2)) {
-        loadJsonProgram("tasks/tasks_short.json", memManager, *p2, 1024);
+    if (load_pcb_from_json(config_dir + "/process_short.json", *p2)) {
+        loadJsonProgram(tasks_dir + "/tasks_short.json", memManager, *p2, 1024);
         process_list.push_back(std::move(p2));
+        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        loaded_count++;
+    } else {
+        std::cout << "❌ Falhou\n";
     }
 
     // Processo 3: Medium
+    std::cout << "   [3/9] Carregando Medium Process... ";
     auto p3 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_medium.json", *p3)) {
-        loadJsonProgram("tasks/tasks_medium.json", memManager, *p3, 2048);
+    if (load_pcb_from_json(config_dir + "/process_medium.json", *p3)) {
+        loadJsonProgram(tasks_dir + "/tasks_medium.json", memManager, *p3, 2048);
         process_list.push_back(std::move(p3));
+        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        loaded_count++;
+    } else {
+        std::cout << "❌ Falhou\n";
     }
 
     // Processo 4: Long
+    std::cout << "   [4/9] Carregando Long Process... ";
     auto p4 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_long.json", *p4)) {
-        loadJsonProgram("tasks/tasks_long.json", memManager, *p4, 3072);
+    if (load_pcb_from_json(config_dir + "/process_long.json", *p4)) {
+        loadJsonProgram(tasks_dir + "/tasks_long.json", memManager, *p4, 3072);
         process_list.push_back(std::move(p4));
+        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        loaded_count++;
+    } else {
+        std::cout << "❌ Falhou\n";
     }
 
     // Processo 5: CPU-Bound
+    std::cout << "   [5/9] Carregando CPU-Bound Process... ";
     auto p5 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_cpu_bound.json", *p5)) {
-        loadJsonProgram("tasks/tasks_cpu_bound.json", memManager, *p5, 4096);
+    if (load_pcb_from_json(config_dir + "/process_cpu_bound.json", *p5)) {
+        loadJsonProgram(tasks_dir + "/tasks_cpu_bound.json", memManager, *p5, 4096);
         process_list.push_back(std::move(p5));
+        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        loaded_count++;
+    } else {
+        std::cout << "❌ Falhou\n";
     }
 
     // Processo 6: IO-Bound
+    std::cout << "   [6/9] Carregando IO-Bound Process... ";
     auto p6 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_io_bound.json", *p6)) {
-        loadJsonProgram("tasks/tasks_io_bound.json", memManager, *p6, 5120);
+    if (load_pcb_from_json(config_dir + "/process_io_bound.json", *p6)) {
+        loadJsonProgram(tasks_dir + "/tasks_io_bound.json", memManager, *p6, 5120);
         process_list.push_back(std::move(p6));
+        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        loaded_count++;
+    } else {
+        std::cout << "❌ Falhou\n";
     }
 
     // Processo 7: Memory-Intensive
+    std::cout << "   [7/9] Carregando Memory-Intensive Process... ";
     auto p7 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_memory_intensive.json", *p7)) {
-        loadJsonProgram("tasks/tasks_memory_intensive.json", memManager, *p7, 6144);
+    if (load_pcb_from_json(config_dir + "/process_memory_intensive.json", *p7)) {
+        loadJsonProgram(tasks_dir + "/tasks_memory_intensive.json", memManager, *p7, 6144);
         process_list.push_back(std::move(p7));
+        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        loaded_count++;
+    } else {
+        std::cout << "❌ Falhou\n";
     }
 
     // Processo 8: Balanced
+    std::cout << "   [8/9] Carregando Balanced Process... ";
     auto p8 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_balanced.json", *p8)) {
-        loadJsonProgram("tasks/tasks_balanced.json", memManager, *p8, 7168);
+    if (load_pcb_from_json(config_dir + "/process_balanced.json", *p8)) {
+        loadJsonProgram(tasks_dir + "/tasks_balanced.json", memManager, *p8, 7168);
         process_list.push_back(std::move(p8));
+        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        loaded_count++;
+    } else {
+        std::cout << "❌ Falhou\n";
     }
-
-    std::cout << "[DEBUG] Tentando carregar processo 9...\n";
     
     // Processo 9: Loop-Heavy (para demonstrar preempção)
+    std::cout << "   [9/9] Carregando Loop-Heavy Process... ";
     auto p9 = std::make_unique<PCB>();
-    std::cout << "[DEBUG] Criado unique_ptr p9\n";
-    bool loaded = load_pcb_from_json("processes/process_loop_heavy.json", *p9);
-    std::cout << "[DEBUG] load_pcb_from_json retornou: " << (loaded ? "true" : "false") << "\n";
+    bool loaded = load_pcb_from_json(config_dir + "/process_loop_heavy.json", *p9);
     if (loaded) {
-        std::cout << "Carregando programa 'tasks_loop_heavy.json' para o processo " << p9->pid << "...\n";
-        loadJsonProgram("tasks/tasks_loop_heavy.json", memManager, *p9, 8192);
+        loadJsonProgram(tasks_dir + "/tasks_loop_heavy.json", memManager, *p9, 8192);
         process_list.push_back(std::move(p9));
-        std::cout << "[DEBUG] Processo 9 adicionado à lista\n";
+        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        loaded_count++;
     } else {
-        std::cerr << "Erro ao carregar 'process_loop_heavy.json'.\n";
+        std::cout << "❌ Falhou\n";
     }
+    
+    std::cout << "\n   📦 Total: " << loaded_count << "/9 processos carregados com sucesso!\n";
     
     // Registrar tempo de chegada de todos os processos
     auto arrival = std::chrono::high_resolution_clock::now();
@@ -197,7 +342,11 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager) {
 }
 
 // Função para executar um escalonador e retornar suas métricas
-SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& scheduler_name, bool save_logs = false) {
+SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& scheduler_name, 
+                               bool save_logs = false,
+                               const std::string& config_dir = "processes",
+                               const std::string& tasks_dir = "tasks",
+                               const std::string& output_dir = "output") {
     SchedulerMetrics metrics;
     metrics.name = scheduler_name;
     
@@ -210,7 +359,7 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
     IOManager ioManager;
     Scheduler scheduler(scheduler_type);
     
-    auto process_list = load_processes(memManager);
+    auto process_list = load_processes(memManager, config_dir, tasks_dir);
     
     for (const auto& process : process_list) {
         scheduler.add_process(process.get());
@@ -220,10 +369,10 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
     int finished_processes = 0;
     std::vector<PCB*> blocked_list;
 
-    create_output_directory();
+    mkdir(output_dir.c_str(), 0755);
     std::ofstream results_file;
     if (save_logs) {
-        results_file.open("output/resultados_" + scheduler_name + ".dat");
+        results_file.open(output_dir + "/resultados_" + scheduler_name + ".dat");
     }
 
     int max_iterations = 10000;
@@ -405,7 +554,10 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
 
 // Função para executar escalonador multicore
 SchedulerMetrics run_multicore_scheduler(int num_cores, SchedulerType scheduler_type, 
-                                         const std::string& scheduler_name, bool save_logs = false) {
+                                         const std::string& scheduler_name, bool save_logs = false,
+                                         const std::string& config_dir = "processes",
+                                         const std::string& tasks_dir = "tasks",
+                                         const std::string& output_dir = "output") {
     SchedulerMetrics metrics;
     metrics.name = scheduler_name;
     metrics.num_cores = num_cores;
@@ -419,7 +571,7 @@ SchedulerMetrics run_multicore_scheduler(int num_cores, SchedulerType scheduler_
     Scheduler scheduler(scheduler_type);
     
     // Carregar processos
-    auto process_list = load_processes(memManager);
+    auto process_list = load_processes(memManager, config_dir, tasks_dir);
     
     for (const auto& process : process_list) {
         scheduler.add_process(process.get());
@@ -435,7 +587,7 @@ SchedulerMetrics run_multicore_scheduler(int num_cores, SchedulerType scheduler_
     create_output_directory();
     std::ofstream results_file;
     if (save_logs) {
-        results_file.open("output/resultados_" + scheduler_name + "_multicore.dat");
+        results_file.open(output_dir + "/resultados_" + scheduler_name + "_multicore.dat");
     }
     
     // Estrutura para métricas por núcleo
@@ -939,28 +1091,111 @@ void print_comparison_table(const std::vector<SchedulerMetrics>& all_metrics) {
 }
 
 
-int main() {
-    // 0. Configuração Inicial - Número de Cores
-    std::cout << "=== SIMULADOR DE ARQUITETURA MULTICORE VON NEUMANN ===\n\n";
-    std::cout << "Digite o número de cores (1-8): ";
-    int num_cores = 1;
-    std::cin >> num_cores;
-    if (num_cores < 1 || num_cores > 8) {
-        std::cerr << "Número inválido. Usando 1 core (single-core).\n";
-        num_cores = 1;
-    }
-    std::cout << "Configuração: " << num_cores << " core(s)\n\n";
+int main(int argc, char* argv[]) {
+    // Parser de argumentos da linha de comando
+    CommandLineConfig config = parse_arguments(argc, argv);
     
-    // 1. Escolha do Algoritmo de Escalonamento
-    std::cout << "Escolha o algoritmo de escalonamento:\n";
-    std::cout << "1. FCFS (First-Come, First-Served)\n";
-    std::cout << "2. SJN (Shortest Job Next)\n";
-    std::cout << "3. Priority\n";
-    std::cout << "4. Round Robin (RR)\n";
-    std::cout << "5. Executar TODOS e Comparar\n";
-    std::cout << "Digite sua escolha (1-5): ";
-    int choice;
-    std::cin >> choice;
+    // Mostrar ajuda se solicitado
+    if (config.help) {
+        print_help(argv[0]);
+        return 0;
+    }
+    
+    std::cout << "=== SIMULADOR DE ARQUITETURA MULTICORE VON NEUMANN ===\n\n";
+    
+    int num_cores = config.cores;
+    int choice = 0;
+    SchedulerType scheduler_type;
+    
+    // ==== MODO INTERATIVO ====
+    if (config.interactive_mode) {
+        // 0. Configuração Inicial - Número de Cores
+        std::cout << "Digite o número de cores (1-8): ";
+        std::cin >> num_cores;
+        if (num_cores < 1 || num_cores > 8) {
+            std::cerr << "Número inválido. Usando 1 core (single-core).\n";
+            num_cores = 1;
+        }
+        std::cout << "Configuração: " << num_cores << " core(s)\n\n";
+        
+        // 1. Escolha do Algoritmo de Escalonamento
+        std::cout << "Escolha o algoritmo de escalonamento:\n";
+        std::cout << "1. FCFS (First-Come, First-Served)\n";
+        std::cout << "2. SJN (Shortest Job Next)\n";
+        std::cout << "3. Priority\n";
+        std::cout << "4. Round Robin (RR)\n";
+        std::cout << "5. Executar TODOS e Comparar\n";
+        std::cout << "Digite sua escolha (1-5): ";
+        std::cin >> choice;
+    }
+    // ==== MODO LINHA DE COMANDO ====
+    else {
+        // Validar número de cores
+        if (num_cores < 1 || num_cores > 8) {
+            std::cerr << "❌ Número de cores inválido: " << num_cores << " (deve ser 1-8)\n";
+            return 1;
+        }
+        
+        // Converter scheduler string para tipo
+        std::map<std::string, SchedulerType> scheduler_map = {
+            {"FCFS", SchedulerType::FCFS},
+            {"SJN", SchedulerType::SJN},
+            {"PRIORITY", SchedulerType::Priority},
+            {"RR", SchedulerType::RoundRobin}
+        };
+        
+        if (scheduler_map.find(config.scheduler) == scheduler_map.end()) {
+            std::cerr << "❌ Escalonador inválido: " << config.scheduler << "\n";
+            std::cerr << "   Use: FCFS, SJN, Priority ou RR\n";
+            return 1;
+        }
+        
+        // Validar política de substituição
+        if (config.replacement_policy != "FIFO" && config.replacement_policy != "LRU") {
+            std::cerr << "❌ Política de substituição inválida: " << config.replacement_policy << "\n";
+            std::cerr << "   Use: FIFO ou LRU\n";
+            return 1;
+        }
+        
+        scheduler_type = scheduler_map[config.scheduler];
+        
+        // Criar diretório de saída se não existir
+        mkdir(config.output_dir.c_str(), 0755);
+        
+        std::cout << "📋 Configuração:\n";
+        std::cout << "   Cores:        " << num_cores << "\n";
+        std::cout << "   Escalonador:  " << config.scheduler << "\n";
+        std::cout << "   Quantum:      " << config.quantum << " ciclos\n";
+        std::cout << "   Substituição: " << config.replacement_policy << "\n";
+        std::cout << "   Config Dir:   " << config.config_dir << "\n";
+        std::cout << "   Tasks Dir:    " << config.tasks_dir << "\n";
+        std::cout << "   Output Dir:   " << config.output_dir << "\n\n";
+        
+        // Executar escalonador diretamente via CLI
+        std::cout << "🚀 Executando " << config.scheduler << "...\n\n";
+        
+        SchedulerMetrics metrics;
+        if (num_cores > 1) {
+            metrics = run_multicore_scheduler(num_cores, scheduler_type, config.scheduler, true,
+                                             config.config_dir, config.tasks_dir, config.output_dir);
+        } else {
+            metrics = run_scheduler(scheduler_type, config.scheduler, true,
+                                   config.config_dir, config.tasks_dir, config.output_dir);
+        }
+        
+        std::cout << "\n✅ Execução concluída!\n";
+        std::cout << "⏱️  Tempo: " << metrics.execution_time_ms << " ms\n";
+        std::cout << "📊 Processos finalizados: " << metrics.processes_finished << "\n";
+        std::cout << "🔄 Context switches: " << metrics.context_switches << "\n";
+        std::cout << "💾 Cache hit rate: " << std::fixed << std::setprecision(2) 
+                  << metrics.cache_hit_rate << "%\n\n";
+        
+        std::string output_file = config.output_dir + "/resultados_" + config.scheduler + 
+                                 (num_cores > 1 ? "_multicore" : "") + ".dat";
+        std::cout << "📁 Resultados salvos em: " << output_file << "\n";
+        
+        return 0;
+    }
 
     if (choice == 5) {
         // Executar todos e comparar
@@ -1041,7 +1276,7 @@ int main() {
         return 0;
     }
 
-    SchedulerType scheduler_type;
+    // Modo interativo - executar escalonador escolhido
     switch (choice) {
         case 1: scheduler_type = SchedulerType::FCFS; break;
         case 2: scheduler_type = SchedulerType::SJN; break;

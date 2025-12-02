@@ -5,8 +5,8 @@
 
 Tempo(ms)      Cache(bytes)     RAM(bytes)    Total Acess      Cache Hit(%)
 ---------------------------------------------------------------------------
-0                         0              0             10              0.00
-0                        60             40             15              0.00
+11                        0              0             10              0.00
+12                       60             40             15              0.00
 
 === ESTATISTICAS FINAIS ===
 Total de snapshots: 2

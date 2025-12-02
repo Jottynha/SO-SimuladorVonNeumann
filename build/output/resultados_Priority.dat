@@ -8,7 +8,7 @@ Quantum:                5
 --- METRICAS DE TEMPO ---
 Tempo de Espera:        0 ms
 Tempo de Resposta:      0 ms
-Tempo de Retorno:       1 ms
+Tempo de Retorno:       0 ms
 
 --- METRICAS DE CPU E MEMORIA ---
 Ciclos de Pipeline:     9
@@ -53,7 +53,7 @@ Quantum:                5
 --- METRICAS DE TEMPO ---
 Tempo de Espera:        1 ms
 Tempo de Resposta:      1 ms
-Tempo de Retorno:       2 ms
+Tempo de Retorno:       1 ms
 
 --- METRICAS DE CPU E MEMORIA ---
 Ciclos de Pipeline:     9
@@ -96,9 +96,9 @@ Prioridade:             1
 Quantum:                5
 
 --- METRICAS DE TEMPO ---
-Tempo de Espera:        2 ms
-Tempo de Resposta:      2 ms
-Tempo de Retorno:       3 ms
+Tempo de Espera:        1 ms
+Tempo de Resposta:      1 ms
+Tempo de Retorno:       1 ms
 
 --- METRICAS DE CPU E MEMORIA ---
 Ciclos de Pipeline:     9
@@ -141,9 +141,9 @@ Prioridade:             2
 Quantum:                5
 
 --- METRICAS DE TEMPO ---
-Tempo de Espera:        3 ms
-Tempo de Resposta:      3 ms
-Tempo de Retorno:       4 ms
+Tempo de Espera:        2 ms
+Tempo de Resposta:      2 ms
+Tempo de Retorno:       2 ms
 
 --- METRICAS DE CPU E MEMORIA ---
 Ciclos de Pipeline:     9
@@ -186,9 +186,9 @@ Prioridade:             2
 Quantum:                5
 
 --- METRICAS DE TEMPO ---
-Tempo de Espera:        4 ms
-Tempo de Resposta:      4 ms
-Tempo de Retorno:       5 ms
+Tempo de Espera:        2 ms
+Tempo de Resposta:      2 ms
+Tempo de Retorno:       2 ms
 
 --- METRICAS DE CPU E MEMORIA ---
 Ciclos de Pipeline:     9
@@ -231,9 +231,9 @@ Prioridade:             2
 Quantum:                5
 
 --- METRICAS DE TEMPO ---
-Tempo de Espera:        6 ms
-Tempo de Resposta:      6 ms
-Tempo de Retorno:       6 ms
+Tempo de Espera:        2 ms
+Tempo de Resposta:      2 ms
+Tempo de Retorno:       2 ms
 
 --- METRICAS DE CPU E MEMORIA ---
 Ciclos de Pipeline:     9
@@ -276,9 +276,9 @@ Prioridade:             2
 Quantum:                5
 
 --- METRICAS DE TEMPO ---
-Tempo de Espera:        6 ms
-Tempo de Resposta:      6 ms
-Tempo de Retorno:       8 ms
+Tempo de Espera:        3 ms
+Tempo de Resposta:      3 ms
+Tempo de Retorno:       3 ms
 
 --- METRICAS DE CPU E MEMORIA ---
 Ciclos de Pipeline:     9
@@ -321,9 +321,9 @@ Prioridade:             2
 Quantum:                5
 
 --- METRICAS DE TEMPO ---
-Tempo de Espera:        8 ms
-Tempo de Resposta:      8 ms
-Tempo de Retorno:       9 ms
+Tempo de Espera:        3 ms
+Tempo de Resposta:      3 ms
+Tempo de Retorno:       3 ms
 
 --- METRICAS DE CPU E MEMORIA ---
 Ciclos de Pipeline:     9
@@ -366,9 +366,9 @@ Prioridade:             3
 Quantum:                5
 
 --- METRICAS DE TEMPO ---
-Tempo de Espera:        9 ms
-Tempo de Resposta:      9 ms
-Tempo de Retorno:       10 ms
+Tempo de Espera:        3 ms
+Tempo de Resposta:      3 ms
+Tempo de Retorno:       4 ms
 
 --- METRICAS DE CPU E MEMORIA ---
 Ciclos de Pipeline:     9
