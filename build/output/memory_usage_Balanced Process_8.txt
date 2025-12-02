@@ -1,0 +1,15 @@
+========================================
+  RELATORIO DE UTILIZACAO DE MEMORIA  
+  Processo: Balanced Process (PID: 8)
+========================================
+
+Tempo(ms)      Cache(bytes)     RAM(bytes)    Total Acess      Cache Hit(%)
+---------------------------------------------------------------------------
+8                         0              0             30              0.00
+9                       140             60             35             14.29
+
+=== ESTATISTICAS FINAIS ===
+Total de snapshots: 2
+Memoria cache maxima: 140 bytes
+Memoria RAM maxima: 60 bytes
+Taxa de cache final: 14.29%

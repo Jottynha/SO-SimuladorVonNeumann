@@ -1,0 +1,15 @@
+========================================
+  RELATORIO DE UTILIZACAO DE MEMORIA  
+  Processo: Medium Process (PID: 3)
+========================================
+
+Tempo(ms)      Cache(bytes)     RAM(bytes)    Total Acess      Cache Hit(%)
+---------------------------------------------------------------------------
+2                         0              0             28              0.00
+3                       132             56             33             15.15
+
+=== ESTATISTICAS FINAIS ===
+Total de snapshots: 2
+Memoria cache maxima: 132 bytes
+Memoria RAM maxima: 56 bytes
+Taxa de cache final: 15.15%

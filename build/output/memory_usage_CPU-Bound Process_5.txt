@@ -1,0 +1,15 @@
+========================================
+  RELATORIO DE UTILIZACAO DE MEMORIA  
+  Processo: CPU-Bound Process (PID: 5)
+========================================
+
+Tempo(ms)      Cache(bytes)     RAM(bytes)    Total Acess      Cache Hit(%)
+---------------------------------------------------------------------------
+4                         0              0             38              0.00
+4                       172             76             43             11.63
+
+=== ESTATISTICAS FINAIS ===
+Total de snapshots: 2
+Memoria cache maxima: 172 bytes
+Memoria RAM maxima: 76 bytes
+Taxa de cache final: 11.63%

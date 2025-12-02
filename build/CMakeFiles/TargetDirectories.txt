@@ -1,0 +1,12 @@
+/home/joao/Projetos/SO-SimuladorVonNeumann/build/CMakeFiles/simulador.dir
+/home/joao/Projetos/SO-SimuladorVonNeumann/build/CMakeFiles/test_hash.dir
+/home/joao/Projetos/SO-SimuladorVonNeumann/build/CMakeFiles/test_bank.dir
+/home/joao/Projetos/SO-SimuladorVonNeumann/build/CMakeFiles/test_ula.dir
+/home/joao/Projetos/SO-SimuladorVonNeumann/build/CMakeFiles/test_metrics.dir
+/home/joao/Projetos/SO-SimuladorVonNeumann/build/CMakeFiles/run.dir
+/home/joao/Projetos/SO-SimuladorVonNeumann/build/CMakeFiles/test-all.dir
+/home/joao/Projetos/SO-SimuladorVonNeumann/build/CMakeFiles/check.dir
+/home/joao/Projetos/SO-SimuladorVonNeumann/build/CMakeFiles/plots.dir
+/home/joao/Projetos/SO-SimuladorVonNeumann/build/CMakeFiles/ajuda.dir
+/home/joao/Projetos/SO-SimuladorVonNeumann/build/CMakeFiles/edit_cache.dir
+/home/joao/Projetos/SO-SimuladorVonNeumann/build/CMakeFiles/rebuild_cache.dir
