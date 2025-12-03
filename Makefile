@@ -38,37 +38,53 @@ $(TARGET_BANK): $(OBJ_BANK)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	@echo "🧹 Limpando arquivos antigos..."
+	@echo "Limpando arquivos antigos..."
 	@rm -f $(OBJ) $(OBJ_HASH) $(TARGET) $(TARGET_HASH) $(TARGET_BANK)
 
+# Limpa apenas os gráficos gerados
+clean-plots:
+	@echo "Limpando gráficos..."
+	@rm -rf plots/*.png
+	@echo "Gráficos removidos (plots/*.png)"
+
+# Limpa apenas os resultados de simulação
+clean-output:
+	@echo "Limpando resultados de simulação..."
+	@rm -rf output/*.dat output/*.txt build/output/*.dat build/output/*.txt
+	@echo "Resultados removidos (output/*.dat, output/*.txt)"
+
+# Limpa tanto plots quanto outputs
+clean-results: clean-plots clean-output
+	@echo "Todos os resultados de simulação foram removidos!"
+
 run:
-	@echo "🚀 Executando o programa..."
+	@echo "Executando o programa..."
 	@./$(TARGET)
 
 # Teste específico para hash register
 test-hash: clean $(TARGET_HASH)
-	@echo "🧪 Executando teste do Hash Register..."
+	@echo "Executando teste do Hash Register..."
 	@./$(TARGET_HASH)
 
 # Teste específico para register bank
 test-bank: clean $(TARGET_BANK)
-	@echo "🧪 Executando teste do Register Bank..."
+	@echo "Executando teste do Register Bank..."
 	@./$(TARGET_BANK)
 
 # Testa ambos os programas
 test-all: clean $(TARGET) $(TARGET_HASH)
-	@echo "🚀 Executando programa principal..."
+	@echo "Executando programa principal..."
 	@./$(TARGET)
 	@echo ""
-	@echo "🧪 Executando teste do Hash Register..."
+	@echo "Executando teste do Hash Register..."
 	@./$(TARGET_HASH)
 	@echo ""
-	@echo "🧪 Executando teste do Register Bank..."
+	@echo "Executando teste do Register Bank..."
 	@./$(TARGET_BANK)
 
 # Comando de ajuda
 help:
-	@echo "📋 SO-SimuladorVonNeumann - Comandos Disponíveis:"
+	@echo "SO-SimuladorVonNeumann - Comandos Disponíveis:"
 	@echo ""
 	@echo "  make / make all    - Compila e executa programa principal"
 	@echo "  make clean         - Remove arquivos gerados (.o, executáveis)"
@@ -81,30 +97,35 @@ help:
 	@echo "  make debug        - Build com símbolos de debug (-g -O0)"
 	@echo "  make help         - Mostra esta mensagem de ajuda"
 	@echo ""
-	@echo "📊 Informações do Projeto:"
+	@echo "Limpeza de Resultados:"
+	@echo "  make clean-plots   - Remove todos os gráficos (plots/*.png)"
+	@echo "  make clean-output  - Remove resultados de simulação (*.dat, *.txt)"
+	@echo "  make clean-results - Remove plots + outputs (limpeza completa)"
+	@echo ""
+	@echo "Informações do Projeto:"
 	@echo "  Compilador: $(CXX)"
 	@echo "  Flags: $(CXXFLAGS)"
 	@echo "  Arquivos fonte: $(words $(SRC) $(SRC_HASH)) arquivos"
 
 # Verificação rápida de todos os componentes
 check: $(TARGET) $(TARGET_HASH)
-	@echo "✅ Executando verificações rápidas..."
-	@echo -n "  Teste principal: "; ./$(TARGET) >/dev/null 2>&1 && echo "✅ PASSOU" || echo "❌ FALHOU"
-	@echo -n "  Teste hash register: "; ./$(TARGET_HASH) >/dev/null 2>&1 && echo "✅ PASSOU" || echo "❌ FALHOU"
-	@echo -n "  Teste register bank: "; ./$(TARGET_BANK) >/dev/null 2>&1 && echo "✅ PASSOU" || echo "❌ FALHOU"
-	@echo "🎯 Verificação concluída!"
+	@echo "Executando verificações rápidas..."
+	@echo -n "  Teste principal: "; ./$(TARGET) >/dev/null 2>&1 && echo "PASSOU" || echo "FALHOU"
+	@echo -n "  Teste hash register: "; ./$(TARGET_HASH) >/dev/null 2>&1 && echo "PASSOU" || echo "FALHOU"
+	@echo -n "  Teste register bank: "; ./$(TARGET_BANK) >/dev/null 2>&1 && echo "PASSOU" || echo "FALHOU"
+	@echo "Verificação concluída!"
 
 # Build com debug symbols
 debug: CXXFLAGS += -DDEBUG -O0 -ggdb3
 debug: clean $(TARGET)
-	@echo "🐛 Build de debug criado com símbolos completos"
+	@echo "Build de debug criado com símbolos completos"
 	@echo "   Use: gdb ./$(TARGET) para debug"
 
 # Lista arquivos do projeto
 list-files:
-	@echo "📁 Arquivos do projeto:"
+	@echo "Arquivos do projeto:"
 	@echo "  Fontes principais: $(SRC)"
 	@echo "  Fontes de teste: $(SRC_HASH)"
 	@echo "  Headers: $(shell find src -name '*.hpp' 2>/dev/null)"
 
-.PHONY: all clean run test-hash test-all help check debug list-files
+.PHONY: all clean run test-hash test-all help check debug list-files clean-plots clean-output clean-results

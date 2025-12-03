@@ -1,280 +1,348 @@
+#!/usr/bin/env python3
+"""
+Script simplificado para comparar diferentes políticas de escalonamento
+Foco: Demonstrar impacto dos escalonadores em métricas chave
+"""
 
-# Script para comparar métricas entre diferentes políticas de escalonamento
-
-import matplotlib.pyplot as plt
-import numpy as np
 import os
 import sys
 import re
+import matplotlib.pyplot as plt
+import numpy as np
 from pathlib import Path
 
-# Configurações de estilo
+# Configurações
 plt.style.use('seaborn-v0_8-darkgrid')
-COLORS = ['#2E86AB', '#A23B72', '#F18F01', '#C73E1D', '#6A994E']
+COLORS = {
+    'FCFS': '#2E86AB',
+    'SJN': '#A23B72',
+    'Priority': '#F18F01',
+    'RoundRobin': '#C73E1D',
+}
 
-class SchedulerComparison:
-    # Comparador de políticas de escalonamento
+class SchedulerComparator:
+    """Comparador de políticas de escalonamento"""
     
-    def __init__(self, output_dir='plots'):
-        self.output_dir = output_dir
-        self.policies = {}
-        os.makedirs(output_dir, exist_ok=True)
+    def __init__(self):
+        self.schedulers = {}
     
-    def load_policy_results(self, policy_name, results_file):
-        """Carrega resultados de uma política"""
-        if not os.path.exists(results_file):
-            print(f"Arquivo não encontrado: {results_file}")
+    def load_comparison_file(self, filepath):
+        """Carrega arquivo de comparação gerado pelo simulador"""
+        if not os.path.exists(filepath):
             return False
         
-        with open(results_file, 'r', encoding='utf-8') as f:
+        with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        metrics = {
-            'policy_name': policy_name,
-            'avg_wait_time': 0,
-            'avg_turnaround_time': 0,
-            'avg_response_time': 0,
-            'total_pipeline_cycles': 0,
-            'total_mem_accesses': 0,
-            'avg_cache_hit_rate': 0,
-            'process_count': 0
-        }
+        # Encontrar seções de métricas
+        self._parse_performance_section(content)
+        self._parse_scheduling_section(content)
+        self._parse_memory_section(content)
         
-        # Extrai métricas agregadas
-        wait_times = re.findall(r'Tempo de Espera:\s+(\d+)', content)
-        turnaround_times = re.findall(r'Tempo de Retorno:\s+(\d+)', content)
-        response_times = re.findall(r'Tempo de Resposta:\s+(\d+)', content)
-        pipeline_cycles = re.findall(r'Ciclos de Pipeline:\s+(\d+)', content)
-        mem_accesses = re.findall(r'Total de Acessos a Mem:\s+(\d+)', content)
-        cache_hits = re.findall(r'Cache Hits:\s+(\d+)', content)
-        
-        if wait_times:
-            metrics['avg_wait_time'] = sum(map(int, wait_times)) / len(wait_times)
-            metrics['process_count'] = len(wait_times)
-        
-        if turnaround_times:
-            metrics['avg_turnaround_time'] = sum(map(int, turnaround_times)) / len(turnaround_times)
-        
-        if response_times:
-            metrics['avg_response_time'] = sum(map(int, response_times)) / len(response_times)
-        
-        if pipeline_cycles:
-            metrics['total_pipeline_cycles'] = sum(map(int, pipeline_cycles))
-        
-        if mem_accesses:
-            metrics['total_mem_accesses'] = sum(map(int, mem_accesses))
-            # Calcular taxa de cache hit média
-            if cache_hits and len(cache_hits) == len(mem_accesses):
-                hit_rates = []
-                for i in range(len(mem_accesses)):
-                    total = int(mem_accesses[i])
-                    hits = int(cache_hits[i])
-                    if total > 0:
-                        hit_rates.append((hits / total) * 100)
-                if hit_rates:
-                    metrics['avg_cache_hit_rate'] = sum(hit_rates) / len(hit_rates)
-        
-        self.policies[policy_name] = metrics
-        return True
+        return len(self.schedulers) > 0
     
-    def plot_time_comparison(self):
-        #Compara tempos entre políticas
-        if not self.policies:
+    def _parse_performance_section(self, content):
+        """Parseia seção de desempenho geral"""
+        section_match = re.search(r'=== DESEMPENHO GERAL ===(.*?)(?===|$)', content, re.DOTALL)
+        if not section_match:
             return
+        
+        section = section_match.group(1)
+        lines = section.split('\n')
+        
+        for line in lines:
+            parts = line.split()
+            if len(parts) >= 6 and parts[0] in ['FCFS', 'SJN', 'Priority', 'RoundRobin']:
+                name = parts[0]
+                if name not in self.schedulers:
+                    self.schedulers[name] = {}
+                
+                self.schedulers[name]['exec_time'] = float(parts[1])
+                self.schedulers[name]['throughput'] = float(parts[2])
+                self.schedulers[name]['processes'] = int(parts[3])
+                self.schedulers[name]['ctx_switches'] = int(parts[4])
+                self.schedulers[name]['cpu_cycles'] = int(parts[5])
+    
+    def _parse_scheduling_section(self, content):
+        """Parseia seção de métricas de escalonamento"""
+        section_match = re.search(r'=== MÉTRICAS DE ESCALONAMENTO ===(.*?)(?===|$)', content, re.DOTALL)
+        if not section_match:
+            return
+        
+        section = section_match.group(1)
+        lines = section.split('\n')
+        
+        for line in lines:
+            parts = line.split()
+            if len(parts) >= 5 and parts[0] in ['FCFS', 'SJN', 'Priority', 'RoundRobin']:
+                name = parts[0]
+                if name in self.schedulers:
+                    self.schedulers[name]['wait_time'] = float(parts[1])
+                    self.schedulers[name]['turnaround_time'] = float(parts[2])
+                    self.schedulers[name]['response_time'] = float(parts[3])
+                    self.schedulers[name]['cpu_util'] = float(parts[4])
+    
+    def _parse_memory_section(self, content):
+        """Parseia seção de eficiência de cache"""
+        section_match = re.search(r'=== EFICIÊNCIA DE CACHE E MEMÓRIA ===(.*?)(?===|$)', content, re.DOTALL)
+        if not section_match:
+            return
+        
+        section = section_match.group(1)
+        lines = section.split('\n')
+        
+        for line in lines:
+            parts = line.split()
+            if len(parts) >= 2 and parts[0] in ['FCFS', 'SJN', 'Priority', 'RoundRobin']:
+                name = parts[0]
+                if name in self.schedulers:
+                    self.schedulers[name]['cache_hit_rate'] = float(parts[1])
+    
+    def generate_plots(self, output_dir='plots'):
+        """Gera gráficos comparativos"""
+        os.makedirs(output_dir, exist_ok=True)
+        
+        print(f"\n📊 Gerando comparações para {len(self.schedulers)} escalonadores...\n")
+        
+        self.plot_time_comparison(output_dir)
+        self.plot_cache_comparison(output_dir)
+        self.plot_efficiency_radar(output_dir)
+        self.plot_summary_matrix(output_dir)
+        
+        print(f"\n✅ Gráficos comparativos salvos em: {output_dir}/\n")
+    
+    def plot_time_comparison(self, output_dir):
+        """Compara tempos entre escalonadores"""
         fig, ax = plt.subplots(figsize=(12, 6))
-        policy_names = list(self.policies.keys())
-        x = np.arange(len(policy_names))
+        
+        names = list(self.schedulers.keys())
+        x = np.arange(len(names))
         width = 0.25
-        wait_times = [self.policies[p]['avg_wait_time'] for p in policy_names]
-        turnaround_times = [self.policies[p]['avg_turnaround_time'] for p in policy_names]
-        response_times = [self.policies[p]['avg_response_time'] for p in policy_names]
-        bars1 = ax.bar(x - width, wait_times, width, label='Tempo de Espera', 
-                      color=COLORS[0], alpha=0.8)
-        bars2 = ax.bar(x, turnaround_times, width, label='Tempo de Retorno', 
-                      color=COLORS[1], alpha=0.8)
-        bars3 = ax.bar(x + width, response_times, width, label='Tempo de Resposta', 
-                      color=COLORS[2], alpha=0.8)        
-        ax.set_xlabel('Política de Escalonamento', fontsize=12, fontweight='bold')
+        
+        wait = [self.schedulers[n].get('wait_time', 0) for n in names]
+        response = [self.schedulers[n].get('response_time', 0) for n in names]
+        turnaround = [self.schedulers[n].get('turnaround_time', 0) for n in names]
+        
+        colors = [COLORS.get(n, '#666666') for n in names]
+        
+        ax.bar(x - width, wait, width, label='Tempo Espera', alpha=0.8)
+        ax.bar(x, response, width, label='Tempo Resposta', alpha=0.8)
+        ax.bar(x + width, turnaround, width, label='Tempo Retorno', alpha=0.8)
+        
+        ax.set_xlabel('Escalonador', fontsize=12, fontweight='bold')
         ax.set_ylabel('Tempo Médio (ms)', fontsize=12, fontweight='bold')
-        ax.set_title('Comparação de Tempos Entre Políticas de Escalonamento', 
-                    fontsize=14, fontweight='bold')
+        ax.set_title('Comparação de Tempos Entre Escalonadores', fontsize=14, fontweight='bold')
         ax.set_xticks(x)
-        ax.set_xticklabels(policy_names)
+        ax.set_xticklabels(names)
         ax.legend()
         ax.grid(axis='y', alpha=0.3)
-        # Adicionar valores nas barras
-        for bars in [bars1, bars2, bars3]:
-            for bar in bars:
-                height = bar.get_height()
-                if height > 0:
-                    ax.text(bar.get_x() + bar.get_width()/2., height,
-                           f'{int(height)}',
-                           ha='center', va='bottom', fontsize=8)
         
         plt.tight_layout()
-        plt.savefig(f'{self.output_dir}/scheduler_time_comparison.png', 
-                   dpi=300, bbox_inches='tight')
+        plt.savefig(f'{output_dir}/comp_1_times.png', dpi=300, bbox_inches='tight')
         plt.close()
-        print("scheduler_time_comparison.png")
+        print("  ✓ comp_1_times.png")
     
-    def plot_efficiency_comparison(self):
-        """Compara eficiência entre políticas"""
-        if not self.policies:
-            return
-        
+    def plot_cache_comparison(self, output_dir):
+        """Compara performance de cache"""
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
         
-        policy_names = list(self.policies.keys())
-        pipeline_cycles = [self.policies[p]['total_pipeline_cycles'] for p in policy_names]
-        cache_hit_rates = [self.policies[p]['avg_cache_hit_rate'] for p in policy_names]
+        names = list(self.schedulers.keys())
+        cache_rates = [self.schedulers[n].get('cache_hit_rate', 0) for n in names]
+        ctx_switches = [self.schedulers[n].get('ctx_switches', 0) for n in names]
         
-        # Gráfico 1: Ciclos de Pipeline Totais
-        bars1 = ax1.bar(range(len(policy_names)), pipeline_cycles, 
-                       color=COLORS[3], alpha=0.8)
-        ax1.set_xlabel('Política de Escalonamento', fontsize=11, fontweight='bold')
-        ax1.set_ylabel('Ciclos Totais', fontsize=11, fontweight='bold')
-        ax1.set_title('Ciclos de Pipeline Totais', fontsize=13, fontweight='bold')
-        ax1.set_xticks(range(len(policy_names)))
-        ax1.set_xticklabels(policy_names)
+        colors = [COLORS.get(n, '#666666') for n in names]
+        
+        # Taxa de cache hit
+        bars1 = ax1.bar(names, cache_rates, color=colors, alpha=0.9)
+        ax1.set_ylabel('Taxa de Cache Hit (%)', fontsize=11, fontweight='bold')
+        ax1.set_title('Eficiência de Cache por Escalonador', fontsize=13, fontweight='bold')
+        ax1.set_ylim(0, max(cache_rates) * 1.2)
         ax1.grid(axis='y', alpha=0.3)
         
-        for bar in bars1:
+        # Adicionar valores
+        for bar, rate in zip(bars1, cache_rates):
             height = bar.get_height()
             ax1.text(bar.get_x() + bar.get_width()/2., height,
-                    f'{int(height)}',
-                    ha='center', va='bottom', fontsize=9)
+                    f'{rate:.1f}%', ha='center', va='bottom', fontsize=10, fontweight='bold')
         
-        # Gráfico 2: Taxa Média de Cache Hit
-        bars2 = ax2.bar(range(len(policy_names)), cache_hit_rates, 
-                       color=COLORS[4], alpha=0.8)
-        ax2.set_xlabel('Política de Escalonamento', fontsize=11, fontweight='bold')
-        ax2.set_ylabel('Taxa de Hit (%)', fontsize=11, fontweight='bold')
-        ax2.set_title('Taxa Média de Cache Hit', fontsize=13, fontweight='bold')
-        ax2.set_xticks(range(len(policy_names)))
-        ax2.set_xticklabels(policy_names)
-        ax2.set_ylim(0, max(cache_hit_rates) * 1.2 if cache_hit_rates else 100)
+        # Context switches
+        bars2 = ax2.bar(names, ctx_switches, color=colors, alpha=0.9)
+        ax2.set_ylabel('Número de Trocas de Contexto', fontsize=11, fontweight='bold')
+        ax2.set_title('Context Switches por Escalonador', fontsize=13, fontweight='bold')
         ax2.grid(axis='y', alpha=0.3)
         
-        for bar in bars2:
+        # Adicionar valores
+        for bar, switches in zip(bars2, ctx_switches):
             height = bar.get_height()
             ax2.text(bar.get_x() + bar.get_width()/2., height,
-                    f'{height:.1f}%',
-                    ha='center', va='bottom', fontsize=9)
+                    f'{switches}', ha='center', va='bottom', fontsize=10, fontweight='bold')
         
         plt.tight_layout()
-        plt.savefig(f'{self.output_dir}/scheduler_efficiency_comparison.png', 
-                   dpi=300, bbox_inches='tight')
+        plt.savefig(f'{output_dir}/comp_2_cache_switches.png', dpi=300, bbox_inches='tight')
         plt.close()
-        print("scheduler_efficiency_comparison.png")
+        print("  ✓ comp_2_cache_switches.png")
     
-    def plot_summary_radar(self):
-        """Gráfico radar comparativo (normalizado)"""
-        if not self.policies or len(self.policies) < 2:
-            return
-        
-        # Métricas para o radar (quanto menor, melhor para tempos)
-        categories = ['Tempo\nEspera', 'Tempo\nRetorno', 'Tempo\nResposta', 
-                     'Ciclos\nPipeline', 'Cache\nHit Rate']
+    def plot_efficiency_radar(self, output_dir):
+        """Gráfico radar comparativo (normalizado: maior = melhor)"""
+        categories = ['Tempo\nResposta', 'Tempo\nEspera', 'Tempo\nRetorno', 
+                     'Cache\nHit', 'CPU\nUtil.']
         
         fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(projection='polar'))
         
         angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
-        angles += angles[:1]  # Fechar o círculo
+        angles += angles[:1]  # Fechar o polígono
         
-        policy_names = list(self.policies.keys())
+        # Normalizar métricas (inverter tempos: menor é melhor)
+        max_response = max(self.schedulers[n].get('response_time', 1) for n in self.schedulers)
+        max_wait = max(self.schedulers[n].get('wait_time', 1) for n in self.schedulers)
+        max_turnaround = max(self.schedulers[n].get('turnaround_time', 1) for n in self.schedulers)
         
-        for i, policy_name in enumerate(policy_names):
-            metrics = self.policies[policy_name]
+        for name in self.schedulers.keys():
+            metrics = self.schedulers[name]
             
-            # Normalizar métricas (0-100, onde 100 é melhor)
-            # Para tempos: inverter (menor é melhor)
-            max_wait = max([p['avg_wait_time'] for p in self.policies.values()]) or 1
-            max_turn = max([p['avg_turnaround_time'] for p in self.policies.values()]) or 1
-            max_resp = max([p['avg_response_time'] for p in self.policies.values()]) or 1
-            max_cycles = max([p['total_pipeline_cycles'] for p in self.policies.values()]) or 1
-            
+            # Normalizar: 100 = melhor, 0 = pior
             values = [
-                100 - (metrics['avg_wait_time'] / max_wait * 100),
-                100 - (metrics['avg_turnaround_time'] / max_turn * 100),
-                100 - (metrics['avg_response_time'] / max_resp * 100),
-                100 - (metrics['total_pipeline_cycles'] / max_cycles * 100),
-                metrics['avg_cache_hit_rate']  # Já está em %
+                100 - (metrics.get('response_time', 0) / max_response * 100),  # Inverter
+                100 - (metrics.get('wait_time', 0) / max_wait * 100),  # Inverter
+                100 - (metrics.get('turnaround_time', 0) / max_turnaround * 100),  # Inverter
+                metrics.get('cache_hit_rate', 0),  # Já é %
+                metrics.get('cpu_util', 0),  # Já é %
             ]
+            values += values[:1]
             
-            values += values[:1]  # Fechar o círculo
-            
-            ax.plot(angles, values, 'o-', linewidth=2, label=policy_name, 
-                   color=COLORS[i % len(COLORS)])
-            ax.fill(angles, values, alpha=0.15, color=COLORS[i % len(COLORS)])
+            color = COLORS.get(name, '#666666')
+            ax.plot(angles, values, 'o-', linewidth=2, label=name, color=color)
+            ax.fill(angles, values, alpha=0.15, color=color)
         
         ax.set_xticks(angles[:-1])
-        ax.set_xticklabels(categories, fontsize=10)
+        ax.set_xticklabels(categories, size=11)
         ax.set_ylim(0, 100)
         ax.set_yticks([20, 40, 60, 80, 100])
-        ax.set_yticklabels(['20', '40', '60', '80', '100'])
+        ax.set_yticklabels(['20%', '40%', '60%', '80%', '100%'])
+        ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
         ax.grid(True)
-        
-        plt.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
-        plt.title('Comparação Normalizada de Políticas de Escalonamento\n(100 = Melhor)', 
-                 fontsize=14, fontweight='bold', pad=20)
+        ax.set_title('Comparação de Desempenho Normalizado\n(Pontos mais distantes = Melhor)', 
+                    size=14, fontweight='bold', pad=20)
         
         plt.tight_layout()
-        plt.savefig(f'{self.output_dir}/scheduler_radar_comparison.png', 
-                   dpi=300, bbox_inches='tight')
+        plt.savefig(f'{output_dir}/comp_3_radar.png', dpi=300, bbox_inches='tight')
         plt.close()
-        print("scheduler_radar_comparison.png")
+        print("  ✓ comp_3_radar.png")
+    
+    def plot_summary_matrix(self, output_dir):
+        """Matriz resumo de todas as métricas"""
+        fig = plt.figure(figsize=(14, 10))
+        gs = fig.add_gridspec(3, 2, hspace=0.35, wspace=0.3)
+        
+        names = list(self.schedulers.keys())
+        colors = [COLORS.get(n, '#666666') for n in names]
+        
+        # 1. Tempo de execução
+        ax1 = fig.add_subplot(gs[0, 0])
+        exec_times = [self.schedulers[n].get('exec_time', 0) for n in names]
+        ax1.bar(names, exec_times, color=colors, alpha=0.9)
+        ax1.set_ylabel('Tempo (ms)', fontweight='bold')
+        ax1.set_title('Tempo de Execução Total', fontweight='bold', fontsize=12)
+        ax1.grid(axis='y', alpha=0.3)
+        
+        # 2. Throughput
+        ax2 = fig.add_subplot(gs[0, 1])
+        throughput = [self.schedulers[n].get('throughput', 0) for n in names]
+        ax2.bar(names, throughput, color=colors, alpha=0.9)
+        ax2.set_ylabel('Processos/segundo', fontweight='bold')
+        ax2.set_title('Throughput', fontweight='bold', fontsize=12)
+        ax2.grid(axis='y', alpha=0.3)
+        
+        # 3. Tempo médio de resposta
+        ax3 = fig.add_subplot(gs[1, 0])
+        response = [self.schedulers[n].get('response_time', 0) for n in names]
+        ax3.bar(names, response, color=colors, alpha=0.9)
+        ax3.set_ylabel('Tempo (ms)', fontweight='bold')
+        ax3.set_title('Tempo Médio de Resposta', fontweight='bold', fontsize=12)
+        ax3.grid(axis='y', alpha=0.3)
+        
+        # 4. Context switches
+        ax4 = fig.add_subplot(gs[1, 1])
+        switches = [self.schedulers[n].get('ctx_switches', 0) for n in names]
+        ax4.bar(names, switches, color=colors, alpha=0.9)
+        ax4.set_ylabel('Quantidade', fontweight='bold')
+        ax4.set_title('Context Switches', fontweight='bold', fontsize=12)
+        ax4.grid(axis='y', alpha=0.3)
+        
+        # 5. Taxa de cache hit
+        ax5 = fig.add_subplot(gs[2, 0])
+        cache = [self.schedulers[n].get('cache_hit_rate', 0) for n in names]
+        bars = ax5.bar(names, cache, color=colors, alpha=0.9)
+        ax5.set_ylabel('Taxa (%)', fontweight='bold')
+        ax5.set_title('Taxa de Cache Hit', fontweight='bold', fontsize=12)
+        ax5.set_ylim(0, 100)
+        ax5.grid(axis='y', alpha=0.3)
+        
+        # 6. Utilização de CPU
+        ax6 = fig.add_subplot(gs[2, 1])
+        cpu_util = [self.schedulers[n].get('cpu_util', 0) for n in names]
+        ax6.bar(names, cpu_util, color=colors, alpha=0.9)
+        ax6.set_ylabel('Utilização (%)', fontweight='bold')
+        ax6.set_title('Utilização de CPU', fontweight='bold', fontsize=12)
+        ax6.set_ylim(0, 100)
+        ax6.grid(axis='y', alpha=0.3)
+        
+        plt.suptitle('Matriz Comparativa Completa de Escalonadores', 
+                    fontsize=16, fontweight='bold', y=0.99)
+        plt.savefig(f'{output_dir}/comp_4_matrix.png', dpi=300, bbox_inches='tight')
+        plt.close()
+        print("  ✓ comp_4_matrix.png")
 
 
 def main():
     """Função principal"""
     print("=" * 70)
-    print("COMPARADOR DE POLÍTICAS DE ESCALONAMENTO")
+    print("   COMPARADOR DE ESCALONADORES - Simulador Von Neumann")
     print("=" * 70)
     
-    # Procura arquivos de resultados
-    base_paths = ['output', 'build/output', '../build/output']
-    policies_files = {
-        'FCFS': 'resultados_FCFS.dat',
-        'SJN': 'resultados_SJN.dat',
-        'Priority': 'resultados_Priority.dat',
-        'Round Robin': 'resultados_RoundRobin.dat'
-    }
+    # Procurar arquivo de comparação
+    possible_files = [
+        'output/comparacao_escalonadores.txt',
+        'output/comparacao_escalonadores_multicore_2cores.txt',
+        'output/comparacao_escalonadores_multicore_4cores.txt',
+        'output/comparacao_escalonadores_multicore_8cores.txt',
+        'build/output/comparacao_escalonadores.txt',
+    ]
     
-    comparator = SchedulerComparison()
-    found_files = 0
-    
-    print("\n🔍 Procurando arquivos de resultados...")
-    
-    for policy_name, filename in policies_files.items():
-        for base_path in base_paths:
-            full_path = os.path.join(base_path, filename)
-            if os.path.exists(full_path):
-                print(f"{policy_name}: {full_path}")
-                comparator.load_policy_results(policy_name, full_path)
-                found_files += 1
+    comparison_file = None
+    if len(sys.argv) > 1:
+        comparison_file = sys.argv[1]
+    else:
+        for f in possible_files:
+            if os.path.exists(f):
+                comparison_file = f
                 break
     
-    if found_files == 0:
-        print("\nNenhum arquivo de resultados encontrado!")
-        print("\nExecute o simulador com opção 5 (Executar TODOS e Comparar)")
-        print("para gerar os arquivos de comparação.")
+    if not comparison_file:
+        print("\n❌ Arquivo de comparação não encontrado!")
+        print("   Execute o simulador com opção '5' (comparar todos)")
+        print("   ou especifique: python compare_schedulers.py <arquivo.txt>")
         return 1
     
-    if found_files < 2:
-        print(f"\nApenas {found_files} política encontrada.")
-        print("São necessárias pelo menos 2 políticas para comparação.")
+    print(f"\n📂 Arquivo: {comparison_file}")
+    
+    # Carregar e comparar
+    comparator = SchedulerComparator()
+    if not comparator.load_comparison_file(comparison_file):
+        print("\n❌ Erro ao carregar arquivo de comparação!")
         return 1
     
-    print(f"\n{found_files} políticas carregadas")
-    print("\nGerando gráficos comparativos...")
+    print(f"   {len(comparator.schedulers)} escalonadores encontrados")
     
-    comparator.plot_time_comparison()
-    comparator.plot_efficiency_comparison()
-    comparator.plot_summary_radar()
+    # Gerar gráficos
+    output_dir = 'plots'
+    if len(sys.argv) > 2:
+        output_dir = sys.argv[2]
     
-    print("\n" + "=" * 70)
-    print("Gráficos de comparação gerados com sucesso!")
-    print(f"Localização: plots/")
+    comparator.generate_plots(output_dir)
+    
+    print("=" * 70)
+    print("✅ Comparação concluída!")
     print("=" * 70)
     
     return 0

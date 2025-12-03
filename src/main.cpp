@@ -34,6 +34,7 @@ struct CommandLineConfig {
     std::string replacement_policy = "FIFO";  // FIFO ou LRU
     std::string scheduler = "FCFS";            // FCFS, SJN, Priority, RR
     int quantum = 5;
+    bool use_threads = true;                  // Se true, usa multi-threading quando cores > 1
     bool interactive_mode = true;             // Se true, usa menu interativo
     bool help = false;
 };
@@ -46,6 +47,7 @@ void print_help(const char* program_name) {
     std::cout << "  --tasks <dir>        Diretório dos arquivos de tarefas (padrão: tasks)\n";
     std::cout << "  --output <dir>       Diretório de saída (padrão: output)\n";
     std::cout << "  --cores <n>          Número de cores 1-8 (padrão: 1)\n";
+    std::cout << "  --no-threads         Desabilita multi-threading (usa sequencial mesmo com múltiplos cores)\n";
     std::cout << "  --replacement <pol>  Política de substituição: FIFO ou LRU (padrão: FIFO)\n";
     std::cout << "  --scheduler <alg>    Algoritmo: FCFS, SJN, Priority, RR (padrão: FCFS)\n";
     std::cout << "  --quantum <n>        Quantum para Round Robin (padrão: 5)\n";
@@ -54,10 +56,12 @@ void print_help(const char* program_name) {
     std::cout << "  " << program_name << "\n";
     std::cout << "    (modo interativo)\n\n";
     std::cout << "  " << program_name << " --cores 4 --scheduler RR --quantum 10\n";
-    std::cout << "    (4 cores, Round Robin, quantum 10)\n\n";
-    std::cout << "  " << program_name << " --config build/processes/ --tasks build/tasks/ \\\n";
+    std::cout << "    (4 cores com threads, Round Robin, quantum 10)\n\n";
+    std::cout << "  " << program_name << " --cores 4 --no-threads --scheduler FCFS\n";
+    std::cout << "    (4 cores SEM threads - execução sequencial)\n\n";
+    std::cout << "  " << program_name << " --config processes/ --tasks tasks/ \\\n";
     std::cout << "    --cores 4 --replacement LRU --scheduler RR --quantum 5 \\\n";
-    std::cout << "    --output build/output/\n";
+    std::cout << "    --output output/\n";
     std::cout << "    (configuração completa via linha de comando)\n\n";
 }
 
@@ -76,6 +80,10 @@ CommandLineConfig parse_arguments(int argc, char* argv[]) {
         if (arg == "--help" || arg == "-h") {
             config.help = true;
             return config;
+        }
+        else if (arg == "--no-threads") {
+            config.use_threads = false;
+            config.interactive_mode = false;
         }
         else if (arg == "--config" && i + 1 < argc) {
             config.config_dir = argv[++i];
@@ -160,52 +168,45 @@ struct SchedulerMetrics {
     std::vector<double> per_core_utilization;
 };
 
-// Função para imprimir as métricas de um processo
+// Função para imprimir as métricas de um processo (SIMPLIFICADA)
 void print_metrics(const PCB& pcb, std::ofstream& outFile) {
-    outFile << "\n--- METRICAS FINAIS DO PROCESSO " << pcb.pid << " ---\n";
-    outFile << "Nome do Processo:       " << pcb.name << "\n";
-    outFile << "Estado Final:           " << (pcb.state == State::Finished ? "Finished" : "Incomplete") << "\n";
-    outFile << "Prioridade:             " << pcb.priority << "\n";
-    outFile << "Quantum:                " << pcb.quantum << "\n";
+    outFile << "\n=== PROCESSO " << pcb.pid << ": " << pcb.name << " ===\n";
+    outFile << "Estado: " << (pcb.state == State::Finished ? "Finalizado" : "Incompleto") << "\n";
+    outFile << "Prioridade: " << pcb.priority << " | Quantum: " << pcb.quantum << "\n";
     
-    // Métricas de Tempo
-    outFile << "\n--- METRICAS DE TEMPO ---\n";
-    outFile << "Tempo de Espera:        " << pcb.wait_time_ms << " ms\n";
-    outFile << "Tempo de Resposta:      " << pcb.response_time_ms << " ms\n";
-    outFile << "Tempo de Retorno:       " << pcb.turnaround_time_ms << " ms\n";
+    // Métricas de Tempo (Escalonamento)
+    outFile << "\n[TEMPOS]\n";
+    outFile << "  Espera:   " << std::setw(6) << pcb.wait_time_ms << " ms\n";
+    outFile << "  Resposta: " << std::setw(6) << pcb.response_time_ms << " ms\n";
+    outFile << "  Retorno:  " << std::setw(6) << pcb.turnaround_time_ms << " ms\n";
     
-    // Métricas de CPU e Memória
-    outFile << "\n--- METRICAS DE CPU E MEMORIA ---\n";
-    outFile << "Ciclos de Pipeline:     " << pcb.pipeline_cycles.load() << "\n";
-    outFile << "Total de Acessos a Mem: " << pcb.mem_accesses_total.load() << "\n";
-    outFile << "  - Leituras:             " << pcb.mem_reads.load() << "\n";
-    outFile << "  - Escritas:             " << pcb.mem_writes.load() << "\n";
-    outFile << "Acessos a Cache L1:     " << pcb.cache_mem_accesses.load() << "\n";
-    outFile << "Acessos a Mem Principal:" << pcb.primary_mem_accesses.load() << "\n";
-    outFile << "Acessos a Mem Secundaria:" << pcb.secondary_mem_accesses.load() << "\n";
-    outFile << "Ciclos Totais de Memoria: " << pcb.memory_cycles.load() << "\n";
-    outFile << "Cache Hits:             " << pcb.cache_hits.load() << "\n";
-    outFile << "Cache Misses:           " << pcb.cache_misses.load() << "\n";
-    outFile << "Ciclos de IO:             " << pcb.io_cycles.load() << "\n";
+    // Métricas de CPU
+    outFile << "\n[CPU]\n";
+    outFile << "  Pipeline Cycles: " << pcb.pipeline_cycles.load() << "\n";
+    outFile << "  IO Cycles:       " << pcb.io_cycles.load() << "\n";
     
-    // Snapshots de memória
-    outFile << "\n--- UTILIZACAO DE MEMORIA ---\n";
-    outFile << "Snapshots registrados:  " << pcb.memory_usage_timeline.size() << "\n";
-    if (!pcb.memory_usage_timeline.empty()) {
-        outFile << "Taxa de cache final:    " << std::fixed << std::setprecision(2) 
-                << pcb.memory_usage_timeline.back().cache_hit_rate << "%\n";
-    }
+    // Métricas de Memória (ESSENCIAL)
+    outFile << "\n[MEMÓRIA]\n";
+    outFile << "  Total Acessos:    " << pcb.mem_accesses_total.load() << "\n";
+    outFile << "    - Leituras:     " << pcb.mem_reads.load() << "\n";
+    outFile << "    - Escritas:     " << pcb.mem_writes.load() << "\n";
+    outFile << "  Cache L1:         " << pcb.cache_mem_accesses.load() << "\n";
+    outFile << "  RAM (Principal):  " << pcb.primary_mem_accesses.load() << "\n";
+    outFile << "  Disco (Secund.):  " << pcb.secondary_mem_accesses.load() << "\n";
+    outFile << "  Ciclos Memória:   " << pcb.memory_cycles.load() << "\n";
     
-    outFile << "\n--- LOG DE EXECUCAO ---\n";
-    for (const auto& log_entry : pcb.execution_log) {
-        outFile << log_entry << "\n";
-    }
+    // Cache Performance (CRUCIAL para análise)
+    uint64_t cache_hits = pcb.cache_hits.load();
+    uint64_t cache_misses = pcb.cache_misses.load();
+    uint64_t total_cache = cache_hits + cache_misses;
+    double hit_rate = (total_cache > 0) ? (100.0 * cache_hits / total_cache) : 0.0;
     
-    outFile << "------------------------------------------\n";
+    outFile << "\n[CACHE PERFORMANCE]\n";
+    outFile << "  Hits:   " << cache_hits << "\n";
+    outFile << "  Misses: " << cache_misses << "\n";
+    outFile << "  Taxa:   " << std::fixed << std::setprecision(2) << hit_rate << "%\n";
     
-    // Gerar relatório detalhado de utilização de memória
-    std::string memory_report_file = "output/memory_usage_" + pcb.name + "_" + std::to_string(pcb.pid) + ".txt";
-    MemoryUsageTracker::generateReport(pcb, memory_report_file);
+    outFile << "\n" << std::string(60, '-') << "\n";
 }
 
 
@@ -227,7 +228,7 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     if (load_pcb_from_json(config_dir + "/process_quick.json", *p1)) {
         loadJsonProgram(tasks_dir + "/tasks_quick.json", memManager, *p1, 0);
         process_list.push_back(std::move(p1));
-        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        std::cout << " PID: " << process_list.back()->pid << "\n";
         loaded_count++;
     } else {
         std::cout << "❌ Falhou\n";
@@ -239,7 +240,7 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     if (load_pcb_from_json(config_dir + "/process_short.json", *p2)) {
         loadJsonProgram(tasks_dir + "/tasks_short.json", memManager, *p2, 1024);
         process_list.push_back(std::move(p2));
-        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        std::cout << " PID: " << process_list.back()->pid << "\n";
         loaded_count++;
     } else {
         std::cout << "❌ Falhou\n";
@@ -251,7 +252,7 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     if (load_pcb_from_json(config_dir + "/process_medium.json", *p3)) {
         loadJsonProgram(tasks_dir + "/tasks_medium.json", memManager, *p3, 2048);
         process_list.push_back(std::move(p3));
-        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        std::cout << " PID: " << process_list.back()->pid << "\n";
         loaded_count++;
     } else {
         std::cout << "❌ Falhou\n";
@@ -263,7 +264,7 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     if (load_pcb_from_json(config_dir + "/process_long.json", *p4)) {
         loadJsonProgram(tasks_dir + "/tasks_long.json", memManager, *p4, 3072);
         process_list.push_back(std::move(p4));
-        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        std::cout << " PID: " << process_list.back()->pid << "\n";
         loaded_count++;
     } else {
         std::cout << "❌ Falhou\n";
@@ -275,7 +276,7 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     if (load_pcb_from_json(config_dir + "/process_cpu_bound.json", *p5)) {
         loadJsonProgram(tasks_dir + "/tasks_cpu_bound.json", memManager, *p5, 4096);
         process_list.push_back(std::move(p5));
-        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        std::cout << " PID: " << process_list.back()->pid << "\n";
         loaded_count++;
     } else {
         std::cout << "❌ Falhou\n";
@@ -287,7 +288,7 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     if (load_pcb_from_json(config_dir + "/process_io_bound.json", *p6)) {
         loadJsonProgram(tasks_dir + "/tasks_io_bound.json", memManager, *p6, 5120);
         process_list.push_back(std::move(p6));
-        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        std::cout << " PID: " << process_list.back()->pid << "\n";
         loaded_count++;
     } else {
         std::cout << "❌ Falhou\n";
@@ -299,7 +300,7 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     if (load_pcb_from_json(config_dir + "/process_memory_intensive.json", *p7)) {
         loadJsonProgram(tasks_dir + "/tasks_memory_intensive.json", memManager, *p7, 6144);
         process_list.push_back(std::move(p7));
-        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        std::cout << " PID: " << process_list.back()->pid << "\n";
         loaded_count++;
     } else {
         std::cout << "❌ Falhou\n";
@@ -311,7 +312,7 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     if (load_pcb_from_json(config_dir + "/process_balanced.json", *p8)) {
         loadJsonProgram(tasks_dir + "/tasks_balanced.json", memManager, *p8, 7168);
         process_list.push_back(std::move(p8));
-        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        std::cout << " PID: " << process_list.back()->pid << "\n";
         loaded_count++;
     } else {
         std::cout << "❌ Falhou\n";
@@ -324,7 +325,7 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     if (loaded) {
         loadJsonProgram(tasks_dir + "/tasks_loop_heavy.json", memManager, *p9, 8192);
         process_list.push_back(std::move(p9));
-        std::cout << "✅ PID: " << process_list.back()->pid << "\n";
+        std::cout << " PID: " << process_list.back()->pid << "\n";
         loaded_count++;
     } else {
         std::cout << "❌ Falhou\n";
@@ -939,17 +940,17 @@ void save_detailed_comparison(const std::vector<SchedulerMetrics>& all_metrics, 
     auto best_wait = std::min_element(all_metrics.begin(), all_metrics.end(),
         [](const auto& a, const auto& b) { return a.avg_wait_time_ms < b.avg_wait_time_ms; });
     
-    outFile << "🏆 Mais Rápido:           " << fastest->name 
+    outFile << "Mais Rápido:           " << fastest->name 
             << " (" << fastest->execution_time_ms << " ms)\n";
-    outFile << "💾 Melhor Taxa Cache:     " << best_cache->name 
+    outFile << " Melhor Taxa Cache:     " << best_cache->name 
             << " (" << best_cache->cache_hit_rate << "%)\n";
-    outFile << "⚡ Maior Throughput:       " << best_throughput->name 
+    outFile << " Maior Throughput:       " << best_throughput->name 
             << " (" << best_throughput->throughput << " proc/s)\n";
-    outFile << "🔄 Menos Ctx Switches:    " << fewest_switches->name 
+    outFile << " Menos Ctx Switches:    " << fewest_switches->name 
             << " (" << fewest_switches->context_switches << " switches)\n";
-    outFile << "⏱️  Melhor Tempo Resposta: " << best_response->name 
+    outFile << "  Melhor Tempo Resposta: " << best_response->name 
             << " (" << best_response->avg_response_time_ms << " ms)\n";
-    outFile << "⌛ Melhor Tempo Espera:   " << best_wait->name 
+    outFile << " Melhor Tempo Espera:   " << best_wait->name 
             << " (" << best_wait->avg_wait_time_ms << " ms)\n";
     
     // Se multicore, adicionar métricas por núcleo
@@ -1078,14 +1079,14 @@ void print_comparison_table(const std::vector<SchedulerMetrics>& all_metrics) {
             return a.avg_response_time_ms < b.avg_response_time_ms;
         });
     
-    std::cout << "\n📊 ANÁLISE:\n";
-    std::cout << "  🏆 Mais Rápido:           " << fastest->name 
+    std::cout << "\nANÁLISE:\n";
+    std::cout << "  Mais Rápido:           " << fastest->name 
               << " (" << fastest->execution_time_ms << " ms)\n";
-    std::cout << "  💾 Melhor Taxa Cache:     " << most_efficient_cache->name 
+    std::cout << "   Melhor Taxa Cache:     " << most_efficient_cache->name 
               << " (" << most_efficient_cache->cache_hit_rate << "%)\n";
-    std::cout << "  🔄 Menos Context Switches: " << fewest_switches->name 
+    std::cout << "   Menos Context Switches: " << fewest_switches->name 
               << " (" << fewest_switches->context_switches << " switches)\n";
-    std::cout << "  ⚡ Melhor Tempo Resposta:  " << best_response->name 
+    std::cout << "   Melhor Tempo Resposta:  " << best_response->name 
               << " (" << best_response->avg_response_time_ms << " ms)\n";
     std::cout << std::string(120, '=') << "\n\n";
 }
@@ -1116,7 +1117,22 @@ int main(int argc, char* argv[]) {
             std::cerr << "Número inválido. Usando 1 core (single-core).\n";
             num_cores = 1;
         }
-        std::cout << "Configuração: " << num_cores << " core(s)\n\n";
+        std::cout << "Configuração: " << num_cores << " core(s)\n";
+        
+        // 0.1 Perguntar sobre threading se múltiplos cores
+        if (num_cores > 0) {
+            char use_threading;
+            std::cout << "Usar multi-threading? (s/n, padrão: s): ";
+            std::cin >> use_threading;
+            if (use_threading == 'n' || use_threading == 'N') {
+                config.use_threads = false;
+                std::cout << "Threading: DESABILITADO (execução sequencial)\n";
+            } else {
+                config.use_threads = true;
+                std::cout << "Threading: HABILITADO (execução paralela)\n";
+            }
+        }
+        std::cout << "\n";
         
         // 1. Escolha do Algoritmo de Escalonamento
         std::cout << "Escolha o algoritmo de escalonamento:\n";
@@ -1132,7 +1148,7 @@ int main(int argc, char* argv[]) {
     else {
         // Validar número de cores
         if (num_cores < 1 || num_cores > 8) {
-            std::cerr << "❌ Número de cores inválido: " << num_cores << " (deve ser 1-8)\n";
+            std::cerr << "Número de cores inválido: " << num_cores << " (deve ser 1-8)\n";
             return 1;
         }
         
@@ -1145,14 +1161,14 @@ int main(int argc, char* argv[]) {
         };
         
         if (scheduler_map.find(config.scheduler) == scheduler_map.end()) {
-            std::cerr << "❌ Escalonador inválido: " << config.scheduler << "\n";
+            std::cerr << "Escalonador inválido: " << config.scheduler << "\n";
             std::cerr << "   Use: FCFS, SJN, Priority ou RR\n";
             return 1;
         }
         
         // Validar política de substituição
         if (config.replacement_policy != "FIFO" && config.replacement_policy != "LRU") {
-            std::cerr << "❌ Política de substituição inválida: " << config.replacement_policy << "\n";
+            std::cerr << "Política de substituição inválida: " << config.replacement_policy << "\n";
             std::cerr << "   Use: FIFO ou LRU\n";
             return 1;
         }
@@ -1162,8 +1178,9 @@ int main(int argc, char* argv[]) {
         // Criar diretório de saída se não existir
         mkdir(config.output_dir.c_str(), 0755);
         
-        std::cout << "📋 Configuração:\n";
+        std::cout << " Configuração:\n";
         std::cout << "   Cores:        " << num_cores << "\n";
+        std::cout << "   Threading:    " << (config.use_threads && num_cores > 1 ? "✓ Habilitado" : "✗ Desabilitado") << "\n";
         std::cout << "   Escalonador:  " << config.scheduler << "\n";
         std::cout << "   Quantum:      " << config.quantum << " ciclos\n";
         std::cout << "   Substituição: " << config.replacement_policy << "\n";
@@ -1172,95 +1189,114 @@ int main(int argc, char* argv[]) {
         std::cout << "   Output Dir:   " << config.output_dir << "\n\n";
         
         // Executar escalonador diretamente via CLI
-        std::cout << "🚀 Executando " << config.scheduler << "...\n\n";
+        std::cout << "Executando " << config.scheduler;
+        if (num_cores > 1) {
+            std::cout << " (" << num_cores << " cores, " 
+                      << (config.use_threads ? "multi-thread" : "sequencial") << ")";
+        }
+        std::cout << "...\n\n";
         
         SchedulerMetrics metrics;
-        if (num_cores > 1) {
+        // Decidir entre multi-thread ou sequencial
+        if (num_cores > 1 && config.use_threads) {
             metrics = run_multicore_scheduler(num_cores, scheduler_type, config.scheduler, true,
                                              config.config_dir, config.tasks_dir, config.output_dir);
         } else {
+            // Execução sequencial (mesmo com múltiplos cores logicamente)
             metrics = run_scheduler(scheduler_type, config.scheduler, true,
                                    config.config_dir, config.tasks_dir, config.output_dir);
+            metrics.num_cores = num_cores; // Registrar número de cores configurados
         }
         
-        std::cout << "\n✅ Execução concluída!\n";
-        std::cout << "⏱️  Tempo: " << metrics.execution_time_ms << " ms\n";
-        std::cout << "📊 Processos finalizados: " << metrics.processes_finished << "\n";
-        std::cout << "🔄 Context switches: " << metrics.context_switches << "\n";
-        std::cout << "💾 Cache hit rate: " << std::fixed << std::setprecision(2) 
+        std::cout << "\nExecução concluída!\n";
+        std::cout << "Tempo: " << metrics.execution_time_ms << " ms\n";
+        std::cout << "Processos finalizados: " << metrics.processes_finished << "\n";
+        std::cout << "Context switches: " << metrics.context_switches << "\n";
+        std::cout << "Cache hit rate: " << std::fixed << std::setprecision(2) 
                   << metrics.cache_hit_rate << "%\n\n";
         
-        std::string output_file = config.output_dir + "/resultados_" + config.scheduler + 
-                                 (num_cores > 1 ? "_multicore" : "") + ".dat";
-        std::cout << "📁 Resultados salvos em: " << output_file << "\n";
+        std::string mode_suffix = (num_cores > 1 && config.use_threads) ? "_multicore" : "";
+        std::string output_file = config.output_dir + "/resultados_" + config.scheduler + mode_suffix + ".dat";
+        std::cout << "Resultados salvos em: " << output_file << "\n";
         
         return 0;
     }
 
     if (choice == 5) {
         // Executar todos e comparar
-        std::cout << "\n🔄 Executando todos os escalonadores";
+        std::cout << "\nExecutando todos os escalonadores";
         if (num_cores > 1) {
-            std::cout << " com " << num_cores << " cores (MULTICORE)";
+            std::cout << " com " << num_cores << " cores";
+            std::cout << " (" << (config.use_threads ? "multi-thread" : "sequencial") << ")";
         }
         std::cout << "...\n\n";
         
         std::vector<SchedulerMetrics> all_metrics;
         
-        // Escolher função apropriada baseada no número de cores
+        // Escolher função apropriada baseada no número de cores e threading
         auto run_func = [&](SchedulerType type, const std::string& name) -> SchedulerMetrics {
-            if (num_cores > 1) {
+            if (num_cores > 1 && config.use_threads) {
                 return run_multicore_scheduler(num_cores, type, name, true);
             } else {
-                return run_scheduler(type, name, true);
+                auto metrics = run_scheduler(type, name, true);
+                metrics.num_cores = num_cores;
+                return metrics;
             }
         };
         
-        std::cout << "⏳ Executando FCFS..." << std::flush;
+        std::cout << "Executando FCFS..." << std::flush;
         all_metrics.push_back(run_func(SchedulerType::FCFS, "FCFS"));
-        std::cout << " ✅\n";
         
-        std::cout << "🔄 Resetando cache para próximo teste..." << std::flush;
+        
+        std::cout << "Resetando cache para próximo teste..." << std::flush;
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        std::cout << " ✅\n";
         
-        std::cout << "⏳ Executando SJN..." << std::flush;
+        
+        std::cout << "Executando SJN..." << std::flush;
         all_metrics.push_back(run_func(SchedulerType::SJN, "SJN"));
-        std::cout << " ✅\n";
         
-        std::cout << "🔄 Resetando cache para próximo teste..." << std::flush;
+        
+        std::cout << "Resetando cache para próximo teste..." << std::flush;
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        std::cout << " ✅\n";
         
-        std::cout << "⏳ Executando Priority..." << std::flush;
+        
+        std::cout << "Executando Priority..." << std::flush;
         all_metrics.push_back(run_func(SchedulerType::Priority, "Priority"));
-        std::cout << " ✅\n";
         
-        std::cout << "🔄 Resetando cache para próximo teste..." << std::flush;
+        
+        std::cout << "Resetando cache para próximo teste..." << std::flush;
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        std::cout << " ✅\n";
         
-        std::cout << "⏳ Executando Round Robin..." << std::flush;
+        
+        std::cout << "Executando Round Robin..." << std::flush;
         all_metrics.push_back(run_func(SchedulerType::RoundRobin, "RoundRobin"));
-        std::cout << " ✅\n";
+        
         
         print_comparison_table(all_metrics);
         
         // Salvar tabela detalhada em arquivo
-        std::string filename = (num_cores > 1) ? 
-            "output/comparacao_escalonadores_multicore_" + std::to_string(num_cores) + "cores.txt" :
-            "output/comparacao_escalonadores.txt";
+        std::string mode_str = (num_cores > 1 && config.use_threads) ? "_multicore_" : "_";
+        std::string filename = "output/comparacao_escalonadores" + mode_str;
+        if (num_cores > 1) {
+            filename += std::to_string(num_cores) + "cores";
+            if (!config.use_threads) {
+                filename += "_sequencial";
+            }
+        }
+        filename += ".txt";
+        
         save_detailed_comparison(all_metrics, filename);
         
-        std::cout << "📁 Logs detalhados salvos em:\n";
-        std::cout << "   - output/resultados_FCFS" << (num_cores > 1 ? "_multicore" : "") << ".dat\n";
-        std::cout << "   - output/resultados_SJN" << (num_cores > 1 ? "_multicore" : "") << ".dat\n";
-        std::cout << "   - output/resultados_Priority" << (num_cores > 1 ? "_multicore" : "") << ".dat\n";
-        std::cout << "   - output/resultados_RoundRobin" << (num_cores > 1 ? "_multicore" : "") << ".dat\n";
+        std::cout << "\nLogs detalhados salvos em:\n";
+        std::string suffix = (num_cores > 1 && config.use_threads) ? "_multicore" : "";
+        std::cout << "   - output/resultados_FCFS" << suffix << ".dat\n";
+        std::cout << "   - output/resultados_SJN" << suffix << ".dat\n";
+        std::cout << "   - output/resultados_Priority" << suffix << ".dat\n";
+        std::cout << "   - output/resultados_RoundRobin" << suffix << ".dat\n";
         std::cout << "   - " << filename << " (Tabela Comparativa Completa)\n\n";
         
         // Se multicore, mostrar métricas por núcleo
-        if (num_cores > 1) {
+        if (num_cores > 1 && config.use_threads) {
             std::cout << "\n=== UTILIZAÇÃO POR NÚCLEO ===\n";
             for (size_t i = 0; i < all_metrics.size(); i++) {
                 std::cout << "\n" << all_metrics[i].name << ":\n";
@@ -1277,208 +1313,59 @@ int main(int argc, char* argv[]) {
     }
 
     // Modo interativo - executar escalonador escolhido
+    std::string scheduler_name;
     switch (choice) {
-        case 1: scheduler_type = SchedulerType::FCFS; break;
-        case 2: scheduler_type = SchedulerType::SJN; break;
-        case 3: scheduler_type = SchedulerType::Priority; break;
-        case 4: scheduler_type = SchedulerType::RoundRobin; break;
+        case 1: 
+            scheduler_type = SchedulerType::FCFS; 
+            scheduler_name = "FCFS";
+            break;
+        case 2: 
+            scheduler_type = SchedulerType::SJN; 
+            scheduler_name = "SJN";
+            break;
+        case 3: 
+            scheduler_type = SchedulerType::Priority; 
+            scheduler_name = "Priority";
+            break;
+        case 4: 
+            scheduler_type = SchedulerType::RoundRobin; 
+            scheduler_name = "RoundRobin";
+            break;
         default:
             std::cerr << "Escolha inválida. Usando FCFS por padrão.\n";
             scheduler_type = SchedulerType::FCFS;
+            scheduler_name = "FCFS";
             break;
     }
-
-    // 2. Inicialização dos Módulos Principais
-    std::cout << "Inicializando o simulador...\n";
-    MemoryManager memManager(8192, 16384); // Aumentando a memória
-    IOManager ioManager;
-    Scheduler scheduler(scheduler_type);
-
-    // 3. Carregamento dos Processos
-    std::vector<std::unique_ptr<PCB>> process_list;
     
-    // Processo 1: Quick
-    auto p1 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_quick.json", *p1)) {
-        std::cout << "Carregando programa 'tasks_quick.json' para o processo " << p1->pid << "...\n";
-        loadJsonProgram("tasks/tasks_quick.json", memManager, *p1, 0);
-        process_list.push_back(std::move(p1));
-    } else {
-        std::cerr << "Erro ao carregar 'process_quick.json'.\n";
+    // Executar usando as mesmas funções do modo CLI para consistência
+    std::cout << "\nExecutando " << scheduler_name;
+    if (num_cores > 1) {
+        std::cout << " (" << num_cores << " cores, " 
+                  << (config.use_threads ? "multi-thread" : "sequencial") << ")";
     }
-
-    // Processo 2: Short
-    auto p2 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_short.json", *p2)) {
-        std::cout << "Carregando programa 'tasks_short.json' para o processo " << p2->pid << "...\n";
-        loadJsonProgram("tasks/tasks_short.json", memManager, *p2, 1024);
-        process_list.push_back(std::move(p2));
-    } else {
-        std::cerr << "Erro ao carregar 'process_short.json'.\n";
-    }
-
-    // Processo 3: Medium
-    auto p3 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_medium.json", *p3)) {
-        std::cout << "Carregando programa 'tasks_medium.json' para o processo " << p3->pid << "...\n";
-        loadJsonProgram("tasks/tasks_medium.json", memManager, *p3, 2048);
-        process_list.push_back(std::move(p3));
-    } else {
-        std::cerr << "Erro ao carregar 'process_medium.json'.\n";
-    }
-
-    // Processo 4: Long
-    auto p4 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_long.json", *p4)) {
-        std::cout << "Carregando programa 'tasks_long.json' para o processo " << p4->pid << "...\n";
-        loadJsonProgram("tasks/tasks_long.json", memManager, *p4, 3072);
-        process_list.push_back(std::move(p4));
-    } else {
-        std::cerr << "Erro ao carregar 'process_long.json'.\n";
-    }
-
-    // Processo 5: CPU-Bound
-    auto p5 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_cpu_bound.json", *p5)) {
-        std::cout << "Carregando programa 'tasks_cpu_bound.json' para o processo " << p5->pid << "...\n";
-        loadJsonProgram("tasks/tasks_cpu_bound.json", memManager, *p5, 4096);
-        process_list.push_back(std::move(p5));
-    } else {
-        std::cerr << "Erro ao carregar 'process_cpu_bound.json'.\n";
-    }
-
-    // Processo 6: IO-Bound
-    auto p6 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_io_bound.json", *p6)) {
-        std::cout << "Carregando programa 'tasks_io_bound.json' para o processo " << p6->pid << "...\n";
-        loadJsonProgram("tasks/tasks_io_bound.json", memManager, *p6, 5120);
-        process_list.push_back(std::move(p6));
-    } else {
-        std::cerr << "Erro ao carregar 'process_io_bound.json'.\n";
-    }
-
-    // Processo 7: Memory-Intensive
-    auto p7 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_memory_intensive.json", *p7)) {
-        std::cout << "Carregando programa 'tasks_memory_intensive.json' para o processo " << p7->pid << "...\n";
-        loadJsonProgram("tasks/tasks_memory_intensive.json", memManager, *p7, 6144);
-        process_list.push_back(std::move(p7));
-    } else {
-        std::cerr << "Erro ao carregar 'process_memory_intensive.json'.\n";
-    }
-
-    // Processo 8: Balanced
-    auto p8 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_balanced.json", *p8)) {
-        std::cout << "Carregando programa 'tasks_balanced.json' para o processo " << p8->pid << "...\n";
-        loadJsonProgram("tasks/tasks_balanced.json", memManager, *p8, 7168);
-        process_list.push_back(std::move(p8));
-    } else {
-        std::cerr << "Erro ao carregar 'process_balanced.json'.\n";
-    }
-
-    // Processo 9: Loop-Heavy (para demonstrar preempção)
-    auto p9 = std::make_unique<PCB>();
-    if (load_pcb_from_json("processes/process_loop_heavy.json", *p9)) {
-        std::cout << "Carregando programa 'tasks_loop_heavy.json' para o processo " << p9->pid << "...\n";
-        loadJsonProgram("tasks/tasks_loop_heavy.json", memManager, *p9, 8192);
-        process_list.push_back(std::move(p9));
-    } else {
-        std::cerr << "Erro ao carregar 'process_loop_heavy.json'.\n";
-    }
-
-    // Adiciona os processos ao escalonador
-    for (const auto& process : process_list) {
-        scheduler.add_process(process.get());
-    }
-
-    int total_processes = process_list.size();
-    int finished_processes = 0;
-    std::vector<PCB*> blocked_list;
-
-    // Abre o arquivo de resultados uma vez
-    create_output_directory();
-    std::ofstream results_file("output/resultados.dat");
-
-    // 4. Loop Principal do Escalonador
-    int max_iterations = 10000; // Proteção contra loop infinito
-    int iteration_count = 0;
+    std::cout << "...\n\n";
     
-    while (finished_processes < total_processes && iteration_count < max_iterations) {
-        iteration_count++;
-        // Desbloqueia processos que terminaram I/O
-        for (auto it = blocked_list.begin(); it != blocked_list.end(); ) {
-            if ((*it)->state == State::Ready) {
-                std::cout << "[Scheduler] Processo " << (*it)->pid << " desbloqueado.\n";
-                scheduler.add_process(*it);
-                it = blocked_list.erase(it);
-            } else {
-                ++it;
-            }
-        }
-
-        PCB* current_process = scheduler.get_next_process();
-
-        if (!current_process) {
-            if (blocked_list.empty() && scheduler.is_empty()) {
-                break; // Todos os processos terminaram
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            continue;
-        }
-
-        std::cout << "\n[Scheduler] Executando processo " << current_process->pid << " (Prioridade: " << current_process->priority << ").\n";
-        current_process->state = State::Running;
-
-        std::vector<std::unique_ptr<IORequest>> io_requests;
-        bool print_lock = true;
-
-        // Marcar estado antes da execução para detectar progresso
-        int before_instr = current_process->instruction_count;
-        size_t before_log = current_process->execution_log.size();
-
-        Core(memManager, *current_process, &io_requests, print_lock);
-
-        // Avalia o estado do processo após a execução
-        if (current_process->state == State::Blocked) {
-            std::cout << "[Scheduler] Processo " << current_process->pid << " bloqueado por I/O.\n";
-            ioManager.registerProcessWaitingForIO(current_process);
-            blocked_list.push_back(current_process);
-        } else if (current_process->state == State::Finished) {
-            std::cout << "[Scheduler] Processo " << current_process->pid << " finalizado.\n";
-            print_metrics(*current_process, results_file);
-            finished_processes++;
-        } else { // Ready or other states
-            std::cout << "[Scheduler] Processo " << current_process->pid << " volta para a fila.\n";
-            // Detecta progresso: instruções executadas ou novos logs
-            bool progressed = (current_process->instruction_count > before_instr) || (current_process->execution_log.size() > before_log);
-            if (progressed) {
-                current_process->stagnation_counter = 0;
-            } else {
-                current_process->stagnation_counter++;
-                if (current_process->stagnation_counter >= 5) {
-                    std::cout << "[Scheduler] Processo " << current_process->pid << " considerado estagnado. Finalizando para evitar loop.\n";
-                    current_process->state = State::Finished;
-                    print_metrics(*current_process, results_file);
-                    finished_processes++;
-                    continue; // pula re-inserção na fila
-                }
-            }
-            current_process->state = State::Ready;
-            scheduler.add_process(current_process);
-        }
+    SchedulerMetrics metrics;
+    // Decidir entre multi-thread ou sequencial
+    if (num_cores > 1 && config.use_threads) {
+        metrics = run_multicore_scheduler(num_cores, scheduler_type, scheduler_name, true);
+    } else {
+        // Execução sequencial (mesmo com múltiplos cores logicamente)
+        metrics = run_scheduler(scheduler_type, scheduler_name, true);
+        metrics.num_cores = num_cores; // Registrar número de cores configurados
     }
-
-    std::cout << "\nSimulação finalizada. Resultados salvos em 'output/resultados.dat'.\n";
-    results_file.close();
     
-    // Gerar relatório agregado de utilização de memória
-    std::vector<PCB*> all_processes;
-    for (const auto& process : process_list) {
-        all_processes.push_back(process.get());
-    }
-    MemoryUsageTracker::generateAggregatedReport(all_processes, "output/memory_aggregated_report.txt");
-    std::cout << "Relatório agregado de memória salvo em 'output/memory_aggregated_report.txt'.\n";
+    std::cout << "\nSimulação concluída!\n";
+    std::cout << "Tempo de execução: " << metrics.execution_time_ms << " ms\n";
+    std::cout << "Processos finalizados: " << metrics.processes_finished << "\n";
+    std::cout << "Context switches: " << metrics.context_switches << "\n";
+    std::cout << "Cache hit rate: " << std::fixed << std::setprecision(2) 
+              << metrics.cache_hit_rate << "%\n\n";
+    
+    std::string mode_suffix = (num_cores > 1 && config.use_threads) ? "_multicore" : "";
+    std::string output_file = "output/resultados_" + scheduler_name + mode_suffix + ".dat";
+    std::cout << "Resultados salvos em: " << output_file << "\n";
     
     return 0;
 }
