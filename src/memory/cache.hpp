@@ -8,7 +8,7 @@
 #include <queue>
 #include <list>
 
-#define CACHE_CAPACITY 16
+#define CACHE_CAPACITY 64  // Aumentado de 16 para 64 - permite mais diferenciação
 #define CACHE_MISS UINT32_MAX
 
 struct CacheEntry {
@@ -40,7 +40,8 @@ public:
     // O método put agora precisa interagir com o MemoryManager para o write-back
     void put(size_t address, size_t data, MemoryManager* memManager);
     void update(size_t address, size_t data);
-    void invalidate();
+    void invalidate();          // Invalida toda a cache
+    void invalidatePartial(float percentage = 0.5);  // Invalida parcialmente (padrão 50%)
     void reset(); // Reseta completamente a cache (dados + estatísticas)
     std::vector<std::pair<size_t, size_t>> dirtyData(); // Mantido para possíveis outras lógicas
     

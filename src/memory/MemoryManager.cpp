@@ -82,12 +82,23 @@ void MemoryManager::simulateContextSwitch() {
     // Context switches causam:
     // - FCFS: menos switches (menos pollution) -> melhor cache
     // - SJN: switches médios -> cache média
-    // - Priority: mais switches (mais pollution) -> pior cache
+    // - Priority/RR: mais switches (mais pollution) -> pior cache
     
-    // Invalida toda a cache para simular que outro processo usou a CPU
-    // Em sistemas reais, isso acontece porque:
-    // 1. Outro processo carrega suas próprias instruções/dados
-    // 2. TLB (Translation Lookaside Buffer) é esvaziada
-    // 3. Linhas de cache são substituídas
-    L1_cache->invalidate();
+    // IMPORTANTE: Não invalida TODA a cache (muito agressivo)
+    // Em sistemas reais, apenas parte da cache é poluída:
+    // 1. TLB é esvaziada (não simulado)
+    // 2. Linhas são gradualmente substituídas pelo novo processo
+    // 3. Cache de instruções vs dados tem comportamento diferente
+    
+    // Invalidação PARCIAL (30% da cache) - mais realista
+    // Isso permite que:
+    // - Escalonadores com menos switches mantenham mais cache quente
+    // - Multi-core tenha vantagem por menos contenção
+    L1_cache->invalidatePartial(0.3f);  // Invalida 30% da cache
+}
+
+void MemoryManager::simulateContextSwitchLight() {
+    // Context switch sem preempção (ex: FCFS puro)
+    // Quase não polui a cache, apenas marca algumas entradas como menos recentes
+    L1_cache->invalidatePartial(0.1f);  // Invalida apenas 10% da cache
 }

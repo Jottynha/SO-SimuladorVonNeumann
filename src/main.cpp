@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iomanip>
 #include <ctime>
+#include <cmath>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <string>
@@ -167,6 +168,101 @@ struct SchedulerMetrics {
     int num_cores = 1;
     std::vector<double> per_core_utilization;
 };
+
+// Função para calcular média de múltiplas execuções
+SchedulerMetrics average_metrics(const std::vector<SchedulerMetrics>& runs) {
+    if (runs.empty()) {
+        return SchedulerMetrics();
+    }
+    
+    SchedulerMetrics avg = runs[0];
+    int n = runs.size();
+    
+    // Resetar valores para acumulação
+    avg.execution_time_ms = 0.0;
+    avg.total_pipeline_cycles = 0;
+    avg.total_memory_accesses = 0;
+    avg.total_cache_hits = 0;
+    avg.total_cache_misses = 0;
+    avg.cache_hit_rate = 0.0;
+    avg.processes_finished = 0;
+    avg.context_switches = 0;
+    avg.total_memory_reads = 0;
+    avg.total_memory_writes = 0;
+    avg.total_cache_accesses = 0;
+    avg.total_primary_mem_accesses = 0;
+    avg.total_secondary_mem_accesses = 0;
+    avg.total_memory_cycles = 0;
+    avg.avg_memory_cycles_per_access = 0.0;
+    avg.throughput = 0.0;
+    avg.avg_wait_time_ms = 0.0;
+    avg.avg_turnaround_time_ms = 0.0;
+    avg.avg_response_time_ms = 0.0;
+    avg.avg_cpu_utilization = 0.0;
+    avg.efficiency = 0.0;
+    
+    // Acumular valores
+    for (const auto& run : runs) {
+        avg.execution_time_ms += run.execution_time_ms;
+        avg.total_pipeline_cycles += run.total_pipeline_cycles;
+        avg.total_memory_accesses += run.total_memory_accesses;
+        avg.total_cache_hits += run.total_cache_hits;
+        avg.total_cache_misses += run.total_cache_misses;
+        avg.cache_hit_rate += run.cache_hit_rate;
+        avg.processes_finished += run.processes_finished;
+        avg.context_switches += run.context_switches;
+        avg.total_memory_reads += run.total_memory_reads;
+        avg.total_memory_writes += run.total_memory_writes;
+        avg.total_cache_accesses += run.total_cache_accesses;
+        avg.total_primary_mem_accesses += run.total_primary_mem_accesses;
+        avg.total_secondary_mem_accesses += run.total_secondary_mem_accesses;
+        avg.total_memory_cycles += run.total_memory_cycles;
+        avg.avg_memory_cycles_per_access += run.avg_memory_cycles_per_access;
+        avg.throughput += run.throughput;
+        avg.avg_wait_time_ms += run.avg_wait_time_ms;
+        avg.avg_turnaround_time_ms += run.avg_turnaround_time_ms;
+        avg.avg_response_time_ms += run.avg_response_time_ms;
+        avg.avg_cpu_utilization += run.avg_cpu_utilization;
+        avg.efficiency += run.efficiency;
+        
+        // Acumular utilização por core
+        if (!run.per_core_utilization.empty() && avg.per_core_utilization.empty()) {
+            avg.per_core_utilization.resize(run.per_core_utilization.size(), 0.0);
+        }
+        for (size_t i = 0; i < run.per_core_utilization.size() && i < avg.per_core_utilization.size(); i++) {
+            avg.per_core_utilization[i] += run.per_core_utilization[i];
+        }
+    }
+    
+    // Calcular médias
+    avg.execution_time_ms /= n;
+    avg.total_pipeline_cycles /= n;
+    avg.total_memory_accesses /= n;
+    avg.total_cache_hits /= n;
+    avg.total_cache_misses /= n;
+    avg.cache_hit_rate /= n;
+    avg.processes_finished /= n;
+    avg.context_switches /= n;
+    avg.total_memory_reads /= n;
+    avg.total_memory_writes /= n;
+    avg.total_cache_accesses /= n;
+    avg.total_primary_mem_accesses /= n;
+    avg.total_secondary_mem_accesses /= n;
+    avg.total_memory_cycles /= n;
+    avg.avg_memory_cycles_per_access /= n;
+    avg.throughput /= n;
+    avg.avg_wait_time_ms /= n;
+    avg.avg_turnaround_time_ms /= n;
+    avg.avg_response_time_ms /= n;
+    avg.avg_cpu_utilization /= n;
+    avg.efficiency /= n;
+    
+    for (auto& util : avg.per_core_utilization) {
+        util /= n;
+    }
+    
+    return avg;
+}
 
 // Função para imprimir as métricas de um processo (SIMPLIFICADA)
 void print_metrics(const PCB& pcb, std::ofstream& outFile) {
@@ -405,6 +501,10 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
         if (current_process->first_run) {
             current_process->start_time = std::chrono::high_resolution_clock::now();
             current_process->first_run = false;
+            
+            // **IMPORTANTE**: Simular cache cold start para processos novos
+            // Cada processo novo "polui" a cache parcialmente ao carregar suas instruções/dados
+            memManager.simulateContextSwitchLight();  // Invalidação leve (10%)
         }
 
         current_process->state = State::Running;
@@ -635,6 +735,11 @@ SchedulerMetrics run_multicore_scheduler(int num_cores, SchedulerType scheduler_
             if (current_process->first_run) {
                 current_process->start_time = std::chrono::high_resolution_clock::now();
                 current_process->first_run = false;
+                
+                // **IMPORTANTE**: Simular cache cold start para processos novos
+                // Cada processo novo "polui" a cache parcialmente ao carregar suas instruções/dados
+                // Em multicore, isso é menos severo pois cada core pode ter sua própria cache L1
+                memManager.simulateContextSwitchLight();  // Invalidação leve (10%)
             }
             
             current_process->state = State::Running;
@@ -810,6 +915,44 @@ SchedulerMetrics run_multicore_scheduler(int num_cores, SchedulerType scheduler_
     return metrics;
 }
 
+// Função para salvar métricas em formato CSV
+void save_metrics_csv(const std::vector<SchedulerMetrics>& all_metrics, const std::string& filename) {
+    std::ofstream csvFile(filename);
+    if (!csvFile.is_open()) {
+        std::cerr << "Erro ao criar arquivo CSV " << filename << "\n";
+        return;
+    }
+    
+    // Comentário indicando que são médias ou execuções únicas
+    csvFile << "# NOTA: Métricas de execuções únicas por escalonador (opção 5) ou médias de múltiplas execuções (opções 1-4)\n";
+    
+    // Cabeçalho CSV
+    csvFile << "Scheduler,ExecTime_ms,Throughput,Processes,ContextSwitches,"
+            << "AvgWaitTime_ms,AvgTurnaroundTime_ms,AvgResponseTime_ms,"
+            << "CPUUtilization,CacheHitRate,Efficiency,Cores,Threading\n";
+    
+    // Dados
+    for (const auto& m : all_metrics) {
+        bool has_threading = (m.num_cores > 1 && !m.per_core_utilization.empty());
+        
+        csvFile << m.name << ","
+                << std::fixed << std::setprecision(3) << m.execution_time_ms << ","
+                << std::setprecision(2) << m.throughput << ","
+                << m.processes_finished << ","
+                << m.context_switches << ","
+                << m.avg_wait_time_ms << ","
+                << m.avg_turnaround_time_ms << ","
+                << m.avg_response_time_ms << ","
+                << m.avg_cpu_utilization << ","
+                << m.cache_hit_rate << ","
+                << std::setprecision(3) << m.efficiency << ","
+                << m.num_cores << ","
+                << (has_threading ? "True" : "False") << "\n";
+    }
+    
+    csvFile.close();
+}
+
 // Função para salvar tabela detalhada em arquivo
 void save_detailed_comparison(const std::vector<SchedulerMetrics>& all_metrics, const std::string& filename) {
     std::ofstream outFile(filename);
@@ -832,6 +975,7 @@ void save_detailed_comparison(const std::vector<SchedulerMetrics>& all_metrics, 
     auto now = std::time(nullptr);
     auto tm = *std::localtime(&now);
     outFile << "                    Data: " << std::put_time(&tm, "%d/%m/%Y %H:%M:%S") << "\n";
+    outFile << "                    NOTA: Métricas de execuções únicas (opção 5 do menu)\n";
     
     outFile << std::string(150, '=') << "\n\n";
     
@@ -1223,8 +1367,8 @@ int main(int argc, char* argv[]) {
     }
 
     if (choice == 5) {
-        // Executar todos e comparar
-        std::cout << "\nExecutando todos os escalonadores";
+        // Executar todos e comparar (1 execução por escalonador)
+        std::cout << "\nExecutando todos os escalonadores (1 execução cada)";
         if (num_cores > 1) {
             std::cout << " com " << num_cores << " cores";
             std::cout << " (" << (config.use_threads ? "multi-thread" : "sequencial") << ")";
@@ -1235,46 +1379,37 @@ int main(int argc, char* argv[]) {
         
         // Escolher função apropriada baseada no número de cores e threading
         auto run_func = [&](SchedulerType type, const std::string& name) -> SchedulerMetrics {
+            std::cout << "▶ Executando " << name << "..." << std::flush;
+            
+            SchedulerMetrics result;
             if (num_cores > 1 && config.use_threads) {
-                return run_multicore_scheduler(num_cores, type, name, true);
+                result = run_multicore_scheduler(num_cores, type, name, true);
             } else {
-                auto metrics = run_scheduler(type, name, true);
-                metrics.num_cores = num_cores;
-                return metrics;
+                result = run_scheduler(type, name, true);
+                result.num_cores = num_cores;
             }
+            
+            std::cout << " ✓ (" << std::fixed << std::setprecision(2) 
+                      << result.execution_time_ms << " ms)\n";
+            
+            return result;
         };
         
-        std::cout << "Executando FCFS..." << std::flush;
         all_metrics.push_back(run_func(SchedulerType::FCFS, "FCFS"));
-        
-        
-        std::cout << "Resetando cache para próximo teste..." << std::flush;
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         
-        
-        std::cout << "Executando SJN..." << std::flush;
         all_metrics.push_back(run_func(SchedulerType::SJN, "SJN"));
-        
-        
-        std::cout << "Resetando cache para próximo teste..." << std::flush;
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         
-        
-        std::cout << "Executando Priority..." << std::flush;
         all_metrics.push_back(run_func(SchedulerType::Priority, "Priority"));
-        
-        
-        std::cout << "Resetando cache para próximo teste..." << std::flush;
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         
-        
-        std::cout << "Executando Round Robin..." << std::flush;
         all_metrics.push_back(run_func(SchedulerType::RoundRobin, "RoundRobin"));
         
         
         print_comparison_table(all_metrics);
         
-        // Salvar tabela detalhada em arquivo
+        // Salvar tabela detalhada em arquivo TXT
         std::string mode_str = (num_cores > 1 && config.use_threads) ? "_multicore_" : "_";
         std::string filename = "output/comparacao_escalonadores" + mode_str;
         if (num_cores > 1) {
@@ -1286,6 +1421,18 @@ int main(int argc, char* argv[]) {
         filename += ".txt";
         
         save_detailed_comparison(all_metrics, filename);
+        
+        // Salvar métricas em CSV para análise Python
+        std::string csv_name;
+        if (num_cores == 1) {
+            csv_name = "output/metrics_single.csv";
+        } else if (config.use_threads) {
+            csv_name = "output/metrics_multi.csv";
+        } else {
+            csv_name = "output/metrics_sequential.csv";
+        }
+        save_metrics_csv(all_metrics, csv_name);
+        std::cout << "\n📊 Métricas CSV salvas em: " << csv_name << "\n";
         
         std::cout << "\nLogs detalhados salvos em:\n";
         std::string suffix = (num_cores > 1 && config.use_threads) ? "_multicore" : "";
@@ -1308,6 +1455,11 @@ int main(int argc, char* argv[]) {
             }
             std::cout << "\n";
         }
+        
+        // Salvar métricas em formato CSV
+        std::string csv_filename = "output/metrics_comparison" + mode_str + ".csv";
+        save_metrics_csv(all_metrics, csv_filename);
+        std::cout << "Métricas salvas em formato CSV: " << csv_filename << "\n";
         
         return 0;
     }

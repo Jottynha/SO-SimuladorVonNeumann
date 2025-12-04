@@ -24,6 +24,9 @@ public:
     // Simula cache pollution (invalidação parcial) durante context switch
     void simulateContextSwitch();
     
+    // Simula context switch SEM invalidar cache (para single-core sem preempção)
+    void simulateContextSwitchLight();
+    
     // Função auxiliar para o write-back da cache
     void writeToFile(uint32_t address, uint32_t data);
 

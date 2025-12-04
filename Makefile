@@ -50,12 +50,18 @@ clean-plots:
 # Limpa apenas os resultados de simulação
 clean-output:
 	@echo "Limpando resultados de simulação..."
-	@rm -rf output/*.dat output/*.txt build/output/*.dat build/output/*.txt
-	@echo "Resultados removidos (output/*.dat, output/*.txt)"
+	@rm -rf output/*.dat output/*.txt output/*.csv build/output/*.dat build/output/*.txt build/output/*.csv
+	@echo "Resultados removidos (output/*.dat, output/*.txt, output/*.csv)"
 
 # Limpa tanto plots quanto outputs
 clean-results: clean-plots clean-output
 	@echo "Todos os resultados de simulação foram removidos!"
+
+# Gera análise de desempenho a partir dos CSVs
+analyze:
+	@echo "📊 Gerando análises de desempenho..."
+	@python3 scripts/analyze_performance.py output plots
+	@echo "✅ Análise concluída! Veja os gráficos em plots/"
 
 run:
 	@echo "Executando o programa..."
@@ -99,8 +105,9 @@ help:
 	@echo ""
 	@echo "Limpeza de Resultados:"
 	@echo "  make clean-plots   - Remove todos os gráficos (plots/*.png)"
-	@echo "  make clean-output  - Remove resultados de simulação (*.dat, *.txt)"
+	@echo "  make clean-output  - Remove resultados de simulação (*.dat, *.txt, *.csv)"
 	@echo "  make clean-results - Remove plots + outputs (limpeza completa)"
+	@echo "  make analyze       - Gera análises de desempenho (requer CSV gerados)"
 	@echo ""
 	@echo "Informações do Projeto:"
 	@echo "  Compilador: $(CXX)"
@@ -128,4 +135,4 @@ list-files:
 	@echo "  Fontes de teste: $(SRC_HASH)"
 	@echo "  Headers: $(shell find src -name '*.hpp' 2>/dev/null)"
 
-.PHONY: all clean run test-hash test-all help check debug list-files clean-plots clean-output clean-results
+.PHONY: all clean run test-hash test-all help check debug list-files clean-plots clean-output clean-results analyze

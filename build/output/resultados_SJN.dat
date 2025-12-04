@@ -1,0 +1,261 @@
+
+=== PROCESSO 1: Quick Process ===
+Estado: Finalizado
+Prioridade: 1 | Quantum: 5
+
+[TEMPOS]
+  Espera:        0 ms
+  Resposta:      0 ms
+  Retorno:       1 ms
+
+[CPU]
+  Pipeline Cycles: 9
+  IO Cycles:       1
+
+[MEMÓRIA]
+  Total Acessos:    15
+    - Leituras:     10
+    - Escritas:     5
+  Cache L1:         5
+  RAM (Principal):  10
+  Disco (Secund.):  0
+  Ciclos Memória:   55
+
+[CACHE PERFORMANCE]
+  Hits:   0
+  Misses: 15
+  Taxa:   0.00%
+
+------------------------------------------------------------
+
+=== PROCESSO 2: Short Process ===
+Estado: Finalizado
+Prioridade: 2 | Quantum: 5
+
+[TEMPOS]
+  Espera:        1 ms
+  Resposta:      1 ms
+  Retorno:       2 ms
+
+[CPU]
+  Pipeline Cycles: 9
+  IO Cycles:       1
+
+[MEMÓRIA]
+  Total Acessos:    27
+    - Leituras:     16
+    - Escritas:     11
+  Cache L1:         13
+  RAM (Principal):  14
+  Disco (Secund.):  0
+  Ciclos Memória:   83
+
+[CACHE PERFORMANCE]
+  Hits:   2
+  Misses: 25
+  Taxa:   7.41%
+
+------------------------------------------------------------
+
+=== PROCESSO 3: Medium Process ===
+Estado: Finalizado
+Prioridade: 2 | Quantum: 5
+
+[TEMPOS]
+  Espera:        2 ms
+  Resposta:      2 ms
+  Retorno:       2 ms
+
+[CPU]
+  Pipeline Cycles: 9
+  IO Cycles:       1
+
+[MEMÓRIA]
+  Total Acessos:    33
+    - Leituras:     19
+    - Escritas:     14
+  Cache L1:         16
+  RAM (Principal):  17
+  Disco (Secund.):  0
+  Ciclos Memória:   101
+
+[CACHE PERFORMANCE]
+  Hits:   2
+  Misses: 31
+  Taxa:   6.06%
+
+------------------------------------------------------------
+
+=== PROCESSO 4: Long Process ===
+Estado: Finalizado
+Prioridade: 1 | Quantum: 5
+
+[TEMPOS]
+  Espera:        2 ms
+  Resposta:      2 ms
+  Retorno:       3 ms
+
+[CPU]
+  Pipeline Cycles: 9
+  IO Cycles:       1
+
+[MEMÓRIA]
+  Total Acessos:    43
+    - Leituras:     24
+    - Escritas:     19
+  Cache L1:         21
+  RAM (Principal):  22
+  Disco (Secund.):  0
+  Ciclos Memória:   131
+
+[CACHE PERFORMANCE]
+  Hits:   2
+  Misses: 41
+  Taxa:   4.65%
+
+------------------------------------------------------------
+
+=== PROCESSO 5: CPU-Bound Process ===
+Estado: Finalizado
+Prioridade: 3 | Quantum: 5
+
+[TEMPOS]
+  Espera:        3 ms
+  Resposta:      3 ms
+  Retorno:       3 ms
+
+[CPU]
+  Pipeline Cycles: 9
+  IO Cycles:       1
+
+[MEMÓRIA]
+  Total Acessos:    43
+    - Leituras:     24
+    - Escritas:     19
+  Cache L1:         21
+  RAM (Principal):  22
+  Disco (Secund.):  0
+  Ciclos Memória:   131
+
+[CACHE PERFORMANCE]
+  Hits:   2
+  Misses: 41
+  Taxa:   4.65%
+
+------------------------------------------------------------
+
+=== PROCESSO 6: IO-Bound Process ===
+Estado: Finalizado
+Prioridade: 1 | Quantum: 5
+
+[TEMPOS]
+  Espera:        3 ms
+  Resposta:      3 ms
+  Retorno:       4 ms
+
+[CPU]
+  Pipeline Cycles: 9
+  IO Cycles:       1
+
+[MEMÓRIA]
+  Total Acessos:    37
+    - Leituras:     21
+    - Escritas:     16
+  Cache L1:         18
+  RAM (Principal):  19
+  Disco (Secund.):  0
+  Ciclos Memória:   113
+
+[CACHE PERFORMANCE]
+  Hits:   2
+  Misses: 35
+  Taxa:   5.41%
+
+------------------------------------------------------------
+
+=== PROCESSO 7: Memory-Intensive Process ===
+Estado: Finalizado
+Prioridade: 2 | Quantum: 5
+
+[TEMPOS]
+  Espera:        4 ms
+  Resposta:      4 ms
+  Retorno:       4 ms
+
+[CPU]
+  Pipeline Cycles: 9
+  IO Cycles:       1
+
+[MEMÓRIA]
+  Total Acessos:    33
+    - Leituras:     19
+    - Escritas:     14
+  Cache L1:         16
+  RAM (Principal):  17
+  Disco (Secund.):  0
+  Ciclos Memória:   101
+
+[CACHE PERFORMANCE]
+  Hits:   2
+  Misses: 31
+  Taxa:   6.06%
+
+------------------------------------------------------------
+
+=== PROCESSO 8: Balanced Process ===
+Estado: Finalizado
+Prioridade: 2 | Quantum: 5
+
+[TEMPOS]
+  Espera:        4 ms
+  Resposta:      4 ms
+  Retorno:       4 ms
+
+[CPU]
+  Pipeline Cycles: 9
+  IO Cycles:       1
+
+[MEMÓRIA]
+  Total Acessos:    35
+    - Leituras:     20
+    - Escritas:     15
+  Cache L1:         17
+  RAM (Principal):  18
+  Disco (Secund.):  0
+  Ciclos Memória:   107
+
+[CACHE PERFORMANCE]
+  Hits:   2
+  Misses: 33
+  Taxa:   5.71%
+
+------------------------------------------------------------
+
+=== PROCESSO 9: Loop-Heavy Process ===
+Estado: Finalizado
+Prioridade: 2 | Quantum: 5
+
+[TEMPOS]
+  Espera:        4 ms
+  Resposta:      4 ms
+  Retorno:       5 ms
+
+[CPU]
+  Pipeline Cycles: 9
+  IO Cycles:       1
+
+[MEMÓRIA]
+  Total Acessos:    207
+    - Leituras:     106
+    - Escritas:     101
+  Cache L1:         103
+  RAM (Principal):  3
+  Disco (Secund.):  101
+  Ciclos Memória:   1128
+
+[CACHE PERFORMANCE]
+  Hits:   2
+  Misses: 205
+  Taxa:   0.97%
+
+------------------------------------------------------------

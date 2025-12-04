@@ -97,6 +97,45 @@ void Cache::invalidate() {
     lru_list.clear();
 }
 
+void Cache::invalidatePartial(float percentage) {
+    // Invalida apenas uma porcentagem da cache (cache pollution parcial)
+    // Mais realista que invalidar tudo durante context switch
+    
+    if (percentage <= 0.0f) return;
+    if (percentage >= 1.0f) {
+        invalidate();  // Se >= 100%, invalida tudo
+        return;
+    }
+    
+    int entries_to_invalidate = static_cast<int>(cacheMap.size() * percentage);
+    int count = 0;
+    
+    // Invalida as primeiras N entradas (simula que o novo processo sobrescreve parte da cache)
+    for (auto &entry : cacheMap) {
+        if (count >= entries_to_invalidate) break;
+        entry.second.isValid = false;
+        count++;
+    }
+    
+    // Não limpamos as estruturas de controle completamente
+    // Apenas removemos parte dos elementos das filas
+    if (policy == ReplacementPolicy::FIFO) {
+        std::queue<size_t> new_queue;
+        int remaining = fifo_queue.size() - entries_to_invalidate;
+        while (remaining > 0 && !fifo_queue.empty()) {
+            new_queue.push(fifo_queue.front());
+            fifo_queue.pop();
+            remaining--;
+        }
+        fifo_queue = new_queue;
+    } else if (policy == ReplacementPolicy::LRU) {
+        while (entries_to_invalidate > 0 && !lru_list.empty()) {
+            lru_list.pop_front();  // Remove os menos recentemente usados
+            entries_to_invalidate--;
+        }
+    }
+}
+
 void Cache::reset() {
     // Limpa completamente a cache (dados + estatísticas)
     cacheMap.clear();

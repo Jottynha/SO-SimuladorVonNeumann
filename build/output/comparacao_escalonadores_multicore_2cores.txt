@@ -1,0 +1,75 @@
+======================================================================================================================================================
+                    RELATÓRIO COMPARATIVO DETALHADO DE ESCALONADORES (MULTICORE - 2 cores)
+                    Data: 03/12/2025 19:22:40
+======================================================================================================================================================
+
+=== DESEMPENHO GERAL ===
+
+Escalonador        Tempo Exec(ms)     Throughput      Processos     Ctx Switch        Ciclos CPU
+----------------------------------------------------------------------------------------------------
+FCFS                       90.689          99.24              9              0                81
+SJN                        12.759         705.38              9              0                81
+Priority                   14.179         634.74              9              0                81
+RoundRobin                 14.931         602.77              9              0                81
+
+
+=== MÉTRICAS DE ESCALONAMENTO ===
+
+Escalonador         Tempo Esp(ms)     Tempo Ret(ms)    Tempo Resp(ms)       Util CPU(%)    Eficiência
+---------------------------------------------------------------------------------------------------------
+FCFS                        77.67             77.89             77.67               8.3         99.240
+SJN                          0.56              0.78              0.56               8.3        705.384
+Priority                     0.67              1.00              0.67               8.3        634.742
+RoundRobin                   1.11              1.67              1.11               8.3        602.773
+
+
+=== MÉTRICAS DE MEMÓRIA ===
+
+Escalonador         Acessos Total       Leituras       Escritas        Cache Hits      Cache Misses
+----------------------------------------------------------------------------------------------------
+FCFS                          473            259            214                40               433
+SJN                           473            259            214                40               433
+Priority                      473            259            214                39               434
+RoundRobin                    473            259            214                40               433
+
+
+=== EFICIÊNCIA DE CACHE E MEMÓRIA ===
+
+Escalonador         Taxa Cache(%)   Ciclos Mem/Acesso     Mem Principal   Mem Secundária
+----------------------------------------------------------------------------------------------------
+FCFS                         8.46               3.920               118               101
+SJN                          8.46               3.920               118               101
+Priority                     8.25               3.928               119               101
+RoundRobin                   8.46               3.920               118               101
+
+
+=== ANÁLISE COMPARATIVA ===
+
+Mais Rápido:           SJN (12.759 ms)
+ Melhor Taxa Cache:     FCFS (8.457%)
+ Maior Throughput:       SJN (705.384 proc/s)
+ Menos Ctx Switches:    FCFS (0 switches)
+  Melhor Tempo Resposta: SJN (0.556 ms)
+ Melhor Tempo Espera:   SJN (0.556 ms)
+
+
+=== UTILIZAÇÃO POR NÚCLEO ===
+
+FCFS:
+  Core 0: 100.00%
+  Core 1: 28.57%
+
+SJN:
+  Core 0: 100.00%
+  Core 1: 23.08%
+
+Priority:
+  Core 0: 100.00%
+  Core 1: 16.67%
+
+RoundRobin:
+  Core 0: 100.00%
+  Core 1: 33.33%
+
+
+======================================================================================================================================================
