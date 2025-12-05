@@ -7,6 +7,7 @@
 #include <vector>
 #include <queue>
 #include <list>
+#include <mutex>
 
 #define CACHE_CAPACITY 64  // Aumentado de 16 para 64 - permite mais diferenciação
 #define CACHE_MISS UINT32_MAX
@@ -28,6 +29,7 @@ private:
     std::list<size_t> lru_list;    // Lista para controlar acessos (LRU)
     ReplacementPolicy policy;      // Política de substituição atual
     size_t capacity;
+    mutable std::mutex cache_mutex;  // Proteger acesso à cache em ambiente multithread
     int cache_misses;
     int cache_hits;
 

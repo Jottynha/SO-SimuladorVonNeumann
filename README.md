@@ -61,6 +61,9 @@ Arquitetura Multicore com Pipeline MIPS, Escalonamento e Gerenciamento de Memór
 - [Métricas de Desempenho](#-métricas-de-desempenho)
 - [Lote Inicial de Processos](#-lote-inicial-de-processos)
 - [Como Compilar e Executar](#-como-compilar-e-executar)
+  - [Instalação Rápida](#instalação-rápida)
+  - [Comandos Disponíveis](#comandos-disponíveis)
+  - [Executando o Simulador](#executando-o-simulador)
 - [Visualização de Resultados](#-visualização-de-resultados)
 - [Configuração do Ambiente (Docker/WSL)](#-configuração-do-ambiente-dockerwsl)
 - [Estrutura do Projeto](#️-estrutura-do-projeto)
@@ -762,100 +765,217 @@ wsl --install -d Ubuntu
 - `make teste`
  
 
-## Como Rodar:
+## 🚀 Como Compilar e Executar
+
+### Pré-requisitos
+
 Para compilar e executar este projeto, você precisará ter os seguintes softwares instalados:
 
-  * `g++` (com suporte a C++17)
-  * `CMake` (versão 3.10 ou superior)
-  * `make`
+* **g++** (com suporte a C++17)
+* **CMake** (versão 3.10 ou superior)
+* **make**
+* **Python 3** (opcional, para geração de gráficos)
 
-### Como Compilar o Projeto
+### Instalação Rápida
 
-O projeto utiliza `CMake` para gerar os arquivos de compilação. O processo é simples e deve ser feito a partir do terminal.
-
-1.  **Abra o terminal** na pasta raiz do projeto.
-
-2.  **Crie e acesse um diretório de build:** É uma boa prática manter os arquivos de compilação separados do código-fonte.
-
-    ```bash
-    mkdir build
-    cd build
-    ```
-
-3.  **Execute o CMake:** Este comando irá configurar o projeto e gerar o `Makefile` dentro da pasta `build`.
-
-    ```bash
-    cmake ..
-    ```
-
-4.  **Compile tudo:** Use o comando `make` para compilar o simulador principal e todos os testes.
-
-    ```bash
-    make
-    ```
-
-    Após a compilação, todos os executáveis estarão dentro da pasta `build`.
-
-### Como Executar o Simulador
-
-Para rodar a simulação principal, você pode usar o executável `simulador` ou o alvo personalizado `run`.
-
-#### Opção 1: Executando diretamente
-
-Certifique-se de que você está dentro da pasta `build`.
+O projeto possui um `Makefile` simplificado na raiz que **automatiza todo o processo**. Basta executar:
 
 ```bash
-./simulador
-```
+# 1️⃣ Clone o repositório
+git clone https://github.com/Jottynha/SO-SimuladorVonNeumann.git
+cd SO-SimuladorVonNeumann
 
-#### Opção 2: Usando o alvo `run`
+# 2️⃣ Configure e compile (cria build/, executa cmake e compila tudo)
+make
 
-Este comando compila o projeto (se necessário) e o executa em seguida.
-
-```bash
-# Estando dentro da pasta 'build'
+# 3️⃣ Execute o simulador
 make run
 ```
 
-**Arquivos Necessários:** O simulador precisa dos arquivos `process1.json` e `tasks.json` para rodar. O sistema de build está configurado para copiá-los automaticamente para a pasta `build` durante a compilação.
+**Pronto!** 🎉 O simulador está configurado e rodando.
 
-### Como Rodar os Testes
+#### O que acontece no `make`?
 
-O projeto inclui vários testes para validar o funcionamento de cada módulo. Você pode executá-los usando os alvos `make` correspondentes de dentro da pasta `build`.
+```bash
+🔧 Configurando o projeto...
+  📁 Criando diretório build/...
+  ⚙️  Executando cmake...
+✅ Configuração concluída!
 
-  * **Rodar todos os testes de uma vez:**
+🔨 Compilando o projeto...
+[  2%] Building CXX object simulador.dir/src/main.cpp.o
+[ 40%] Linking CXX executable simulador
+[100%] Built target simulador
+✅ Compilação concluída!
+```
 
-    ```bash
-    make test-all
-    ```
+O Makefile automatiza:
+1. **Criação do diretório `build/`**
+2. **Execução do `cmake ..`** para gerar Makefiles
+3. **Compilação com `make -j`** (usa todos os cores)
+4. **Cópia dos arquivos JSON** (processos e tasks)
 
-  * **Verificação rápida (Passou/Falhou):**
+---
 
-    ```bash
-    make check
-    ```
+### Comandos Disponíveis
 
-  * **Executar testes individuais:**
+Execute `make help` para ver todos os comandos:
 
-      * **Teste da ULA:** `make test_ula`
-      * **Teste do Mapeador de Registradores:** `make test_hash`
-      * **Teste do Banco de Registradores:** `make test_bank`
-      * **Teste de Métricas da CPU:** `make test_metrics`
+```bash
+make help
+```
 
-### Comandos Úteis do Makefile
+**Tabela de Comandos:**
 
-O `CMakeLists.txt` foi configurado para criar atalhos úteis que você pode usar com o `make`:
+| Comando | Descrição |
+|---------|-----------|
+| **Configuração e Build** ||
+| `make` | 🔧 Configura e compila o projeto completo (setup + build) |
+| `make setup` | 📁 Cria diretório `build/` e executa `cmake` |
+| `make build` | 🔨 Compila o simulador e testes |
+| `make install-deps` | 📦 Instala dependências Python (matplotlib, pandas, etc.) |
+| **Execução** ||
+| `make run` | 🚀 Executa o simulador principal |
+| `make test` | 🧪 Executa todos os testes |
+| `make check` | ✅ Verificação rápida (PASSOU/FALHOU) |
+| **Análise** ||
+| `make plots` | 📊 Gera gráficos de análise de desempenho |
+| **Limpeza** ||
+| `make clean` | 🧹 Remove todo o diretório `build/` |
+| `make clean-results` | 🗑️ Remove apenas resultados (.dat, .csv, .png) |
+| **Ajuda** ||
+| `make help` | ℹ️ Mostra lista completa de comandos |
 
-| Comando         | Função                                                               |
-| --------------- | -------------------------------------------------------------------- |
-| `make` ou `make all` | Compila todos os alvos (simulador e testes).                      |
-| `make simulador`| Compila apenas o executável principal do simulador.                |
-| `make run`      | Executa o simulador principal (`./simulador`).                       |
-| `make test-all` | Executa todos os programas de teste em sequência.                    |
-| `make check`    | Fornece uma saída simplificada indicando se cada teste passou ou falhou. |
-| `make ajuda`    | Exibe uma lista com todos os comandos disponíveis.                   |
-| `make clean`    | Remove todos os arquivos gerados pela compilação.                    |
-| `make plots`    | Gera todos os gráficos de visualização (requer Python/matplotlib).  |
+---
+
+### Compilação Manual (Alternativa)
+
+Se preferir executar os comandos manualmente sem o Makefile wrapper:
+
+```bash
+# 1. Criar e acessar diretório de build
+mkdir build
+cd build
+
+# 2. Configurar com CMake
+cmake ..
+
+# 3. Compilar (usando todos os cores disponíveis)
+make -j$(nproc)
+
+# 4. Executar
+./simulador
+```
+
+---
+
+### Executando o Simulador
+
+Ao executar `make run` (ou `cd build && ./simulador`), você verá o menu interativo:
+
+```
+=== SIMULADOR DE ARQUITETURA MULTICORE VON NEUMANN ===
+
+Digite o número de cores (1-8): 8
+Configuração: 8 core(s)
+Usar multi-threading? (s/n, padrão: s): s
+Threading: HABILITADO (execução paralela)
+
+Escolha o algoritmo de escalonamento:
+1. FCFS (First-Come, First-Served)
+2. SJN (Shortest Job Next)
+3. Priority
+4. Round Robin (RR)
+5. Executar TODOS e Comparar
+Digite sua escolha (1-5): 5
+
+Executando FCFS (8 cores, multi-thread)...
+[LOAD_PROCESSES] Carregando 9 processos...
+Simulação concluída!
+Tempo de execução: 12.77 ms
+
+Executando SJN (8 cores, multi-thread)...
+Simulação concluída!
+Tempo de execução: 13.45 ms
+
+[... continua com Priority e RoundRobin ...]
+
+📊 Métricas salvas em: output/metrics_multi.csv
+```
+
+**Opções de execução:**
+
+* **Número de cores**: 1 a 8
+  - `1 core`: Execução sequencial (baseline)
+  - `2-4 cores`: Paralelismo moderado
+  - `8 cores`: Máximo paralelismo (recomendado para comparações)
+
+* **Multi-threading**: 
+  - `s` (sim): Usa threads C++ reais (execução paralela verdadeira)
+  - `n` (não): Simulação sequencial (útil para debugging)
+
+* **Escalonador**:
+  - `1-4`: Executa um escalonador específico
+  - `5`: **Recomendado** - Executa todos os 4 escalonadores e gera comparação completa
+
+---
+
+### Executando Testes
+
+```bash
+# Todos os testes
+make test
+
+# Verificação rápida
+make check
+
+# Testes individuais (a partir do diretório build/)
+cd build
+make test_ula      # Teste da ULA
+make test_hash     # Teste do mapeamento de registradores
+make test_bank     # Teste do banco de registradores
+make test_metrics  # Teste de métricas da CPU
+```
+
+### Gerando Gráficos de Análise
+
+Após executar o simulador com a opção 5, você pode gerar gráficos:
+
+```bash
+# Instalar dependências (primeira vez)
+make install-deps
+
+# Gerar gráficos
+make plots
+```
+
+Os gráficos serão salvos em `plots/`:
+- Comparação de tempos de execução
+- Utilização de CPU por escalonador
+- Cache hit rate
+- Context switches
+- E mais...
+
+### Arquivos de Saída
+
+O simulador gera vários arquivos de saída em `build/output/`:
+
+| Arquivo | Conteúdo |
+|---------|----------|
+| `resultados_*_multicore.dat` | Logs detalhados de execução por escalonador |
+| `comparacao_escalonadores_multicore_*cores.txt` | Tabela comparativa completa |
+| `metrics_multi.csv` | Métricas agregadas para análise |
+| `metrics_comparison_multicore_*.csv` | Comparação entre escalonadores |
+
+### Limpeza
+
+```bash
+# Limpar tudo (remove build/)
+make clean
+
+# Limpar apenas resultados de simulação
+make clean-results
+```
 
 ---
 

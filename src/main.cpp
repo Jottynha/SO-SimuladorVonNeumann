@@ -748,6 +748,7 @@ SchedulerMetrics run_multicore_scheduler(int num_cores, SchedulerType scheduler_
     std::mutex blocked_mutex;
     std::mutex scheduler_mutex;
     std::mutex metrics_mutex;
+    std::mutex memory_mutex;  // Proteger acesso ao MemoryManager
     
     create_output_directory();
     std::ofstream results_file;
