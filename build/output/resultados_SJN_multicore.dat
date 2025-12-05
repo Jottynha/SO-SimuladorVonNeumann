@@ -1,7 +1,98 @@
 
 === PROCESSO 1: Quick Process ===
 Estado: Finalizado
-Prioridade: 1 | Quantum: 5
+Prioridade: 1 | Quantum: 1000
+
+[TEMPOS]
+  Espera:        0 ms
+  Resposta:      0 ms
+  Retorno:       0 ms
+
+[CPU]
+  Pipeline Cycles: 5
+  IO Cycles:       1
+
+[MEMÓRIA]
+  Total Acessos:    5
+    - Leituras:     5
+    - Escritas:     0
+  Cache L1:         0
+  RAM (Principal):  5
+  Disco (Secund.):  0
+  Ciclos Memória:   25
+
+[CACHE PERFORMANCE]
+  Hits:   0
+  Misses: 5
+  Taxa:   0.00%
+
+[REGISTRADORES FINAIS]
+========================================
+====== Estado do Banco de Registradores ======
+========================================
+pc    : 0x10000000  (Decimal: 16)
+ir    : 0xfc000000  (Decimal: -67108864)
+mar   : 0x10000000  (Decimal: 16)
+sr    : 0x00000000  (Decimal: 0)
+hi    : 0x00000000  (Decimal: 0)
+lo    : 0x00000000  (Decimal: 0)
+----------------------------------------
+zero  : 0x00000000  (Decimal: 0)
+at    : 0x00000000  (Decimal: 0)
+v0    : 0x00000000  (Decimal: 0)
+v1    : 0x00000000  (Decimal: 0)
+a0    : 0x00000000  (Decimal: 0)
+a1    : 0x00000000  (Decimal: 0)
+a2    : 0x00000000  (Decimal: 0)
+a3    : 0x00000000  (Decimal: 0)
+----------------------------------------
+t0    : 0xa0000000  (Decimal: 10)
+t1    : 0x14000000  (Decimal: 20)
+t2    : 0x1e000000  (Decimal: 30)
+t3    : 0x00000000  (Decimal: 0)
+t4    : 0x00000000  (Decimal: 0)
+t5    : 0x00000000  (Decimal: 0)
+t6    : 0x00000000  (Decimal: 0)
+t7    : 0x00000000  (Decimal: 0)
+t8    : 0x00000000  (Decimal: 0)
+t9    : 0x00000000  (Decimal: 0)
+----------------------------------------
+s0    : 0x00000000  (Decimal: 0)
+s1    : 0x00000000  (Decimal: 0)
+s2    : 0x00000000  (Decimal: 0)
+s3    : 0x00000000  (Decimal: 0)
+s4    : 0x00000000  (Decimal: 0)
+s5    : 0x00000000  (Decimal: 0)
+s6    : 0x00000000  (Decimal: 0)
+s7    : 0x00000000  (Decimal: 0)
+----------------------------------------
+gp    : 0x00000000  (Decimal: 0)
+sp    : 0x00000000  (Decimal: 0)
+fp    : 0x00000000  (Decimal: 0)
+ra    : 0x00000000  (Decimal: 0)
+k0    : 0x00000000  (Decimal: 0)
+k1    : 0x00000000  (Decimal: 0)
+========================================
+
+[INSTRUÇÕES EXECUTADAS]
+  #   1 [FETCH] PC=0 MAR=0 INSTR=0x2008000a (00100000000010000000000000001010)
+  #   2 [DECODE] RAW=0x2008000a OP=ADDI rs=zero rt=t0 imm=10
+  #   3 [FETCH] PC=4 MAR=4 INSTR=0x20090014 (00100000000010010000000000010100)
+  #   4 [IMM] ADDI t0 = zero(0) + 10 -> 10
+  #   5 [DECODE] RAW=0x20090014 OP=ADDI rs=zero rt=t1 imm=20
+  #   6 [FETCH] PC=8 MAR=8 INSTR=0x1095020 (00000001000010010101000000100000)
+  #   7 [IMM] ADDI t1 = zero(0) + 20 -> 20
+  #   8 [DECODE] RAW=0x1095020 OP=ADD rs=t0 rt=t1 rd=t2
+  #   9 [FETCH] PC=12 MAR=12 INSTR=0xf80a0000 (11111000000010100000000000000000)
+  #  10 [ARIT] ADD t2 = t0(10) ADD t1(20) = 30
+  #  11 [DECODE] RAW=0xf80a0000 OP=PRINT rt=t2
+  #  12 [FETCH] PC=16 MAR=16 INSTR=0xfc000000 (11111100000000000000000000000000)
+
+------------------------------------------------------------
+
+=== PROCESSO 2: Short Process ===
+Estado: Finalizado
+Prioridade: 2 | Quantum: 1000
 
 [TEMPOS]
   Espera:        0 ms
@@ -9,28 +100,108 @@ Prioridade: 1 | Quantum: 5
   Retorno:       1 ms
 
 [CPU]
-  Pipeline Cycles: 9
+  Pipeline Cycles: 11
   IO Cycles:       1
 
 [MEMÓRIA]
-  Total Acessos:    15
-    - Leituras:     10
-    - Escritas:     5
+  Total Acessos:    16
+    - Leituras:     15
+    - Escritas:     1
   Cache L1:         5
-  RAM (Principal):  10
+  RAM (Principal):  11
   Disco (Secund.):  0
-  Ciclos Memória:   55
+  Ciclos Memória:   60
 
 [CACHE PERFORMANCE]
-  Hits:   0
-  Misses: 15
-  Taxa:   0.00%
+  Hits:   5
+  Misses: 11
+  Taxa:   31.25%
+
+[REGISTRADORES FINAIS]
+========================================
+====== Estado do Banco de Registradores ======
+========================================
+pc    : 0x42800000  (Decimal: 1064)
+ir    : 0xfc000000  (Decimal: -67108864)
+mar   : 0x42800000  (Decimal: 1064)
+sr    : 0x00000000  (Decimal: 0)
+hi    : 0x00000000  (Decimal: 0)
+lo    : 0x00000000  (Decimal: 0)
+----------------------------------------
+zero  : 0x00000000  (Decimal: 0)
+at    : 0x00000000  (Decimal: 0)
+v0    : 0x00000000  (Decimal: 0)
+v1    : 0x00000000  (Decimal: 0)
+a0    : 0x00000000  (Decimal: 0)
+a1    : 0x00000000  (Decimal: 0)
+a2    : 0x00000000  (Decimal: 0)
+a3    : 0x00000000  (Decimal: 0)
+----------------------------------------
+t0    : 0xa0000000  (Decimal: 10)
+t1    : 0xa0000000  (Decimal: 10)
+t2    : 0xa0000000  (Decimal: 10)
+t3    : 0xa0000000  (Decimal: 10)
+t4    : 0xa0000000  (Decimal: 10)
+t5    : 0x14000000  (Decimal: 20)
+t6    : 0x14000000  (Decimal: 20)
+t7    : 0x28000000  (Decimal: 40)
+t8    : 0x00000000  (Decimal: 0)
+t9    : 0x00000000  (Decimal: 0)
+----------------------------------------
+s0    : 0x00000000  (Decimal: 0)
+s1    : 0x00000000  (Decimal: 0)
+s2    : 0x00000000  (Decimal: 0)
+s3    : 0x00000000  (Decimal: 0)
+s4    : 0x00000000  (Decimal: 0)
+s5    : 0x00000000  (Decimal: 0)
+s6    : 0x00000000  (Decimal: 0)
+s7    : 0x00000000  (Decimal: 0)
+----------------------------------------
+gp    : 0x00000000  (Decimal: 0)
+sp    : 0x00000000  (Decimal: 0)
+fp    : 0x00000000  (Decimal: 0)
+ra    : 0x00000000  (Decimal: 0)
+k0    : 0x00000000  (Decimal: 0)
+k1    : 0x00000000  (Decimal: 0)
+========================================
+
+[INSTRUÇÕES EXECUTADAS]
+  #   1 [FETCH] PC=1024 MAR=1024 INSTR=0x2008000a (00100000000010000000000000001010)
+  #   2 [DECODE] RAW=0x2008000a OP=ADDI rs=zero rt=t0 imm=10
+  #   3 [FETCH] PC=1028 MAR=1028 INSTR=0xaf880000 (10101111100010000000000000000000)
+  #   4 [IMM] ADDI t0 = zero(0) + 10 -> 10
+  #   5 [DECODE] RAW=0xaf880000 OP=SW rs=gp rt=t0 imm=0
+  #   6 [FETCH] PC=1032 MAR=1032 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #   7 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #   8 [FETCH] PC=1036 MAR=1036 INSTR=0x8f8a0000 (10001111100010100000000000000000)
+  #   9 [DECODE] RAW=0x8f8a0000 OP=LW rs=gp rt=t2 imm=0
+  #  10 [FETCH] PC=1040 MAR=1040 INSTR=0x8f8b0000 (10001111100010110000000000000000)
+  #  11 [WRITE-BACK] SW addr=0 value=10 from reg t0
+  #  12 [MEMORY] LW addr=0 value=10 -> t1
+  #  13 [DECODE] RAW=0x8f8b0000 OP=LW rs=gp rt=t3 imm=0
+  #  14 [FETCH] PC=1044 MAR=1044 INSTR=0x8f8c0000 (10001111100011000000000000000000)
+  #  15 [MEMORY] LW addr=0 value=10 -> t2
+  #  16 [DECODE] RAW=0x8f8c0000 OP=LW rs=gp rt=t4 imm=0
+  #  17 [FETCH] PC=1048 MAR=1048 INSTR=0x12a6820 (00000001001010100110100000100000)
+  #  18 [MEMORY] LW addr=0 value=10 -> t3
+  #  19 [DECODE] RAW=0x12a6820 OP=ADD rs=t1 rt=t2 rd=t5
+  #  20 [FETCH] PC=1052 MAR=1052 INSTR=0x16c7020 (00000001011011000111000000100000)
+  #  21 [MEMORY] LW addr=0 value=10 -> t4
+  #  22 [ARIT] ADD t5 = t1(10) ADD t2(10) = 20
+  #  23 [DECODE] RAW=0x16c7020 OP=ADD rs=t3 rt=t4 rd=t6
+  #  24 [FETCH] PC=1056 MAR=1056 INSTR=0x1ae7820 (00000001101011100111100000100000)
+  #  25 [ARIT] ADD t6 = t3(10) ADD t4(10) = 20
+  #  26 [DECODE] RAW=0x1ae7820 OP=ADD rs=t5 rt=t6 rd=t7
+  #  27 [FETCH] PC=1060 MAR=1060 INSTR=0xf80f0000 (11111000000011110000000000000000)
+  #  28 [ARIT] ADD t7 = t5(20) ADD t6(20) = 40
+  #  29 [DECODE] RAW=0xf80f0000 OP=PRINT rt=t7
+  #  30 [FETCH] PC=1064 MAR=1064 INSTR=0xfc000000 (11111100000000000000000000000000)
 
 ------------------------------------------------------------
 
 === PROCESSO 3: Medium Process ===
 Estado: Finalizado
-Prioridade: 2 | Quantum: 5
+Prioridade: 2 | Quantum: 1000
 
 [TEMPOS]
   Espera:        1 ms
@@ -38,28 +209,117 @@ Prioridade: 2 | Quantum: 5
   Retorno:       1 ms
 
 [CPU]
-  Pipeline Cycles: 9
+  Pipeline Cycles: 14
   IO Cycles:       1
 
 [MEMÓRIA]
-  Total Acessos:    33
-    - Leituras:     19
-    - Escritas:     14
-  Cache L1:         19
+  Total Acessos:    21
+    - Leituras:     18
+    - Escritas:     3
+  Cache L1:         7
   RAM (Principal):  14
   Disco (Secund.):  0
-  Ciclos Memória:   89
+  Ciclos Memória:   77
 
 [CACHE PERFORMANCE]
-  Hits:   5
-  Misses: 28
-  Taxa:   15.15%
+  Hits:   7
+  Misses: 14
+  Taxa:   33.33%
+
+[REGISTRADORES FINAIS]
+========================================
+====== Estado do Banco de Registradores ======
+========================================
+pc    : 0x83400000  (Decimal: 2100)
+ir    : 0xfc000000  (Decimal: -67108864)
+mar   : 0x83400000  (Decimal: 2100)
+sr    : 0x00000000  (Decimal: 0)
+hi    : 0x00000000  (Decimal: 0)
+lo    : 0x00000000  (Decimal: 0)
+----------------------------------------
+zero  : 0x00000000  (Decimal: 0)
+at    : 0x00000000  (Decimal: 0)
+v0    : 0x00000000  (Decimal: 0)
+v1    : 0x00000000  (Decimal: 0)
+a0    : 0x00000000  (Decimal: 0)
+a1    : 0x00000000  (Decimal: 0)
+a2    : 0x00000000  (Decimal: 0)
+a3    : 0x00000000  (Decimal: 0)
+----------------------------------------
+t0    : 0x50000000  (Decimal: 5)
+t1    : 0xa0000000  (Decimal: 10)
+t2    : 0x50000000  (Decimal: 5)
+t3    : 0xa0000000  (Decimal: 10)
+t4    : 0xf0000000  (Decimal: 15)
+t5    : 0xf0000000  (Decimal: 15)
+t6    : 0xe1000000  (Decimal: 225)
+t7    : 0xdc000000  (Decimal: 220)
+t8    : 0x00000000  (Decimal: 0)
+t9    : 0x00000000  (Decimal: 0)
+----------------------------------------
+s0    : 0x00000000  (Decimal: 0)
+s1    : 0x00000000  (Decimal: 0)
+s2    : 0x00000000  (Decimal: 0)
+s3    : 0x00000000  (Decimal: 0)
+s4    : 0x00000000  (Decimal: 0)
+s5    : 0x00000000  (Decimal: 0)
+s6    : 0x00000000  (Decimal: 0)
+s7    : 0x00000000  (Decimal: 0)
+----------------------------------------
+gp    : 0x00000000  (Decimal: 0)
+sp    : 0x00000000  (Decimal: 0)
+fp    : 0x00000000  (Decimal: 0)
+ra    : 0x00000000  (Decimal: 0)
+k0    : 0x00000000  (Decimal: 0)
+k1    : 0x00000000  (Decimal: 0)
+========================================
+
+[INSTRUÇÕES EXECUTADAS]
+  #   1 [FETCH] PC=2048 MAR=2048 INSTR=0x20080005 (00100000000010000000000000000101)
+  #   2 [DECODE] RAW=0x20080005 OP=ADDI rs=zero rt=t0 imm=5
+  #   3 [FETCH] PC=2052 MAR=2052 INSTR=0x2009000a (00100000000010010000000000001010)
+  #   4 [IMM] ADDI t0 = zero(0) + 5 -> 5
+  #   5 [DECODE] RAW=0x2009000a OP=ADDI rs=zero rt=t1 imm=10
+  #   6 [FETCH] PC=2056 MAR=2056 INSTR=0xaf880000 (10101111100010000000000000000000)
+  #   7 [IMM] ADDI t1 = zero(0) + 10 -> 10
+  #   8 [DECODE] RAW=0xaf880000 OP=SW rs=gp rt=t0 imm=0
+  #   9 [FETCH] PC=2060 MAR=2060 INSTR=0xaf890004 (10101111100010010000000000000100)
+  #  10 [DECODE] RAW=0xaf890004 OP=SW rs=gp rt=t1 imm=4
+  #  11 [FETCH] PC=2064 MAR=2064 INSTR=0x8f8a0000 (10001111100010100000000000000000)
+  #  12 [DECODE] RAW=0x8f8a0000 OP=LW rs=gp rt=t2 imm=0
+  #  13 [FETCH] PC=2068 MAR=2068 INSTR=0x8f8b0004 (10001111100010110000000000000100)
+  #  14 [WRITE-BACK] SW addr=0 value=5 from reg t0
+  #  15 [DECODE] RAW=0x8f8b0004 OP=LW rs=gp rt=t3 imm=4
+  #  16 [FETCH] PC=2072 MAR=2072 INSTR=0x14b6020 (00000001010010110110000000100000)
+  #  17 [WRITE-BACK] SW addr=4 value=10 from reg t1
+  #  18 [MEMORY] LW addr=0 value=5 -> t2
+  #  19 [DECODE] RAW=0x14b6020 OP=ADD rs=t2 rt=t3 rd=t4
+  #  20 [FETCH] PC=2076 MAR=2076 INSTR=0xaf8c0008 (10101111100011000000000000001000)
+  #  21 [MEMORY] LW addr=4 value=10 -> t3
+  #  22 [ARIT] ADD t4 = t2(5) ADD t3(10) = 15
+  #  23 [DECODE] RAW=0xaf8c0008 OP=SW rs=gp rt=t4 imm=8
+  #  24 [FETCH] PC=2080 MAR=2080 INSTR=0x8f8d0008 (10001111100011010000000000001000)
+  #  25 [DECODE] RAW=0x8f8d0008 OP=LW rs=gp rt=t5 imm=8
+  #  26 [FETCH] PC=2084 MAR=2084 INSTR=0x8f8d0008 (10001111100011010000000000001000)
+  #  27 [DECODE] RAW=0x8f8d0008 OP=LW rs=gp rt=t5 imm=8
+  #  28 [FETCH] PC=2088 MAR=2088 INSTR=0x18d7018 (00000001100011010111000000011000)
+  #  29 [WRITE-BACK] SW addr=8 value=15 from reg t4
+  #  30 [MEMORY] LW addr=8 value=15 -> t5
+  #  31 [DECODE] RAW=0x18d7018 OP=MULT rs=t4 rt=t5 rd=t6
+  #  32 [FETCH] PC=2092 MAR=2092 INSTR=0x1ca7822 (00000001110010100111100000100010)
+  #  33 [MEMORY] LW addr=8 value=15 -> t5
+  #  34 [ARIT] MULT t6 = t4(15) MULT t5(15) = 225
+  #  35 [DECODE] RAW=0x1ca7822 OP=SUB rs=t6 rt=t2 rd=t7
+  #  36 [FETCH] PC=2096 MAR=2096 INSTR=0xf80f0000 (11111000000011110000000000000000)
+  #  37 [ARIT] SUB t7 = t6(225) SUB t2(5) = 220
+  #  38 [DECODE] RAW=0xf80f0000 OP=PRINT rt=t7
+  #  39 [FETCH] PC=2100 MAR=2100 INSTR=0xfc000000 (11111100000000000000000000000000)
 
 ------------------------------------------------------------
 
 === PROCESSO 4: Long Process ===
 Estado: Finalizado
-Prioridade: 1 | Quantum: 5
+Prioridade: 1 | Quantum: 1000
 
 [TEMPOS]
   Espera:        1 ms
@@ -67,173 +327,507 @@ Prioridade: 1 | Quantum: 5
   Retorno:       2 ms
 
 [CPU]
-  Pipeline Cycles: 9
-  IO Cycles:       1
-
-[MEMÓRIA]
-  Total Acessos:    43
-    - Leituras:     24
-    - Escritas:     19
-  Cache L1:         24
-  RAM (Principal):  19
-  Disco (Secund.):  0
-  Ciclos Memória:   119
-
-[CACHE PERFORMANCE]
-  Hits:   5
-  Misses: 38
-  Taxa:   11.63%
-
-------------------------------------------------------------
-
-=== PROCESSO 2: Short Process ===
-Estado: Finalizado
-Prioridade: 2 | Quantum: 5
-
-[TEMPOS]
-  Espera:        0 ms
-  Resposta:      0 ms
-  Retorno:       1 ms
-
-[CPU]
-  Pipeline Cycles: 9
-  IO Cycles:       1
-
-[MEMÓRIA]
-  Total Acessos:    27
-    - Leituras:     16
-    - Escritas:     11
-  Cache L1:         14
-  RAM (Principal):  13
-  Disco (Secund.):  0
-  Ciclos Memória:   79
-
-[CACHE PERFORMANCE]
-  Hits:   3
-  Misses: 24
-  Taxa:   11.11%
-
-------------------------------------------------------------
-
-=== PROCESSO 7: Memory-Intensive Process ===
-Estado: Finalizado
-Prioridade: 2 | Quantum: 5
-
-[TEMPOS]
-  Espera:        2 ms
-  Resposta:      2 ms
-  Retorno:       3 ms
-
-[CPU]
-  Pipeline Cycles: 9
+  Pipeline Cycles: 19
   IO Cycles:       1
 
 [MEMÓRIA]
   Total Acessos:    33
-    - Leituras:     19
-    - Escritas:     14
-  Cache L1:         19
-  RAM (Principal):  14
+    - Leituras:     30
+    - Escritas:     3
+  Cache L1:         14
+  RAM (Principal):  19
   Disco (Secund.):  0
-  Ciclos Memória:   89
+  Ciclos Memória:   109
 
 [CACHE PERFORMANCE]
-  Hits:   5
-  Misses: 28
-  Taxa:   15.15%
+  Hits:   14
+  Misses: 19
+  Taxa:   42.42%
 
-------------------------------------------------------------
+[REGISTRADORES FINAIS]
+========================================
+====== Estado do Banco de Registradores ======
+========================================
+pc    : 0xc4800000  (Decimal: 3144)
+ir    : 0xfc000000  (Decimal: -67108864)
+mar   : 0xc4800000  (Decimal: 3144)
+sr    : 0x00000000  (Decimal: 0)
+hi    : 0x00000000  (Decimal: 0)
+lo    : 0x00000000  (Decimal: 0)
+----------------------------------------
+zero  : 0x00000000  (Decimal: 0)
+at    : 0x00000000  (Decimal: 0)
+v0    : 0x00000000  (Decimal: 0)
+v1    : 0x00000000  (Decimal: 0)
+a0    : 0x00000000  (Decimal: 0)
+a1    : 0x00000000  (Decimal: 0)
+a2    : 0x00000000  (Decimal: 0)
+a3    : 0x00000000  (Decimal: 0)
+----------------------------------------
+t0    : 0x64000000  (Decimal: 100)
+t1    : 0x64000000  (Decimal: 100)
+t2    : 0x64000000  (Decimal: 100)
+t3    : 0xc8000000  (Decimal: 200)
+t4    : 0xc8000000  (Decimal: 200)
+t5    : 0xc8000000  (Decimal: 200)
+t6    : 0xc8000000  (Decimal: 200)
+t7    : 0x19000000  (Decimal: 400)
+t8    : 0x00000000  (Decimal: 0)
+t9    : 0x00000000  (Decimal: 0)
+----------------------------------------
+s0    : 0x00000000  (Decimal: 0)
+s1    : 0x00000000  (Decimal: 0)
+s2    : 0x00000000  (Decimal: 0)
+s3    : 0x00000000  (Decimal: 0)
+s4    : 0x00000000  (Decimal: 0)
+s5    : 0x00000000  (Decimal: 0)
+s6    : 0x00000000  (Decimal: 0)
+s7    : 0x00000000  (Decimal: 0)
+----------------------------------------
+gp    : 0x00000000  (Decimal: 0)
+sp    : 0x00000000  (Decimal: 0)
+fp    : 0x00000000  (Decimal: 0)
+ra    : 0x00000000  (Decimal: 0)
+k0    : 0x00000000  (Decimal: 0)
+k1    : 0x00000000  (Decimal: 0)
+========================================
 
-=== PROCESSO 6: IO-Bound Process ===
-Estado: Finalizado
-Prioridade: 1 | Quantum: 5
-
-[TEMPOS]
-  Espera:        2 ms
-  Resposta:      2 ms
-  Retorno:       3 ms
-
-[CPU]
-  Pipeline Cycles: 9
-  IO Cycles:       1
-
-[MEMÓRIA]
-  Total Acessos:    37
-    - Leituras:     21
-    - Escritas:     16
-  Cache L1:         21
-  RAM (Principal):  16
-  Disco (Secund.):  0
-  Ciclos Memória:   101
-
-[CACHE PERFORMANCE]
-  Hits:   5
-  Misses: 32
-  Taxa:   13.51%
-
-------------------------------------------------------------
-
-=== PROCESSO 8: Balanced Process ===
-Estado: Finalizado
-Prioridade: 2 | Quantum: 5
-
-[TEMPOS]
-  Espera:        3 ms
-  Resposta:      3 ms
-  Retorno:       3 ms
-
-[CPU]
-  Pipeline Cycles: 9
-  IO Cycles:       1
-
-[MEMÓRIA]
-  Total Acessos:    35
-    - Leituras:     20
-    - Escritas:     15
-  Cache L1:         20
-  RAM (Principal):  15
-  Disco (Secund.):  0
-  Ciclos Memória:   95
-
-[CACHE PERFORMANCE]
-  Hits:   5
-  Misses: 30
-  Taxa:   14.29%
-
-------------------------------------------------------------
-
-=== PROCESSO 9: Loop-Heavy Process ===
-Estado: Finalizado
-Prioridade: 2 | Quantum: 5
-
-[TEMPOS]
-  Espera:        3 ms
-  Resposta:      3 ms
-  Retorno:       3 ms
-
-[CPU]
-  Pipeline Cycles: 9
-  IO Cycles:       1
-
-[MEMÓRIA]
-  Total Acessos:    207
-    - Leituras:     106
-    - Escritas:     101
-  Cache L1:         106
-  RAM (Principal):  0
-  Disco (Secund.):  101
-  Ciclos Memória:   1116
-
-[CACHE PERFORMANCE]
-  Hits:   5
-  Misses: 202
-  Taxa:   2.42%
+[INSTRUÇÕES EXECUTADAS]
+  #   1 [FETCH] PC=3072 MAR=3072 INSTR=0x20080064 (00100000000010000000000001100100)
+  #   2 [DECODE] RAW=0x20080064 OP=ADDI rs=zero rt=t0 imm=100
+  #   3 [FETCH] PC=3076 MAR=3076 INSTR=0xaf880000 (10101111100010000000000000000000)
+  #   4 [IMM] ADDI t0 = zero(0) + 100 -> 100
+  #   5 [DECODE] RAW=0xaf880000 OP=SW rs=gp rt=t0 imm=0
+  #   6 [FETCH] PC=3080 MAR=3080 INSTR=0xaf880004 (10101111100010000000000000000100)
+  #   7 [DECODE] RAW=0xaf880004 OP=SW rs=gp rt=t0 imm=4
+  #   8 [FETCH] PC=3084 MAR=3084 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #   9 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #  10 [FETCH] PC=3088 MAR=3088 INSTR=0x8f8a0004 (10001111100010100000000000000100)
+  #  11 [WRITE-BACK] SW addr=0 value=100 from reg t0
+  #  12 [DECODE] RAW=0x8f8a0004 OP=LW rs=gp rt=t2 imm=4
+  #  13 [FETCH] PC=3092 MAR=3092 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #  14 [WRITE-BACK] SW addr=4 value=100 from reg t0
+  #  15 [MEMORY] LW addr=0 value=100 -> t1
+  #  16 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #  17 [FETCH] PC=3096 MAR=3096 INSTR=0x8f8a0004 (10001111100010100000000000000100)
+  #  18 [MEMORY] LW addr=4 value=100 -> t2
+  #  19 [DECODE] RAW=0x8f8a0004 OP=LW rs=gp rt=t2 imm=4
+  #  20 [FETCH] PC=3100 MAR=3100 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #  21 [MEMORY] LW addr=0 value=100 -> t1
+  #  22 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #  23 [FETCH] PC=3104 MAR=3104 INSTR=0x8f8a0004 (10001111100010100000000000000100)
+  #  24 [MEMORY] LW addr=4 value=100 -> t2
+  #  25 [DECODE] RAW=0x8f8a0004 OP=LW rs=gp rt=t2 imm=4
+  #  26 [FETCH] PC=3108 MAR=3108 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #  27 [MEMORY] LW addr=0 value=100 -> t1
+  #  28 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #  29 [FETCH] PC=3112 MAR=3112 INSTR=0x8f8a0004 (10001111100010100000000000000100)
+  #  30 [MEMORY] LW addr=4 value=100 -> t2
+  #  31 [DECODE] RAW=0x8f8a0004 OP=LW rs=gp rt=t2 imm=4
+  #  32 [FETCH] PC=3116 MAR=3116 INSTR=0x12a5820 (00000001001010100101100000100000)
+  #  33 [MEMORY] LW addr=0 value=100 -> t1
+  #  34 [DECODE] RAW=0x12a5820 OP=ADD rs=t1 rt=t2 rd=t3
+  #  35 [FETCH] PC=3120 MAR=3120 INSTR=0xaf8b0008 (10101111100010110000000000001000)
+  #  36 [MEMORY] LW addr=4 value=100 -> t2
+  #  37 [ARIT] ADD t3 = t1(100) ADD t2(100) = 200
+  #  38 [DECODE] RAW=0xaf8b0008 OP=SW rs=gp rt=t3 imm=8
+  #  39 [FETCH] PC=3124 MAR=3124 INSTR=0x8f8c0008 (10001111100011000000000000001000)
+  #  40 [DECODE] RAW=0x8f8c0008 OP=LW rs=gp rt=t4 imm=8
+  #  41 [FETCH] PC=3128 MAR=3128 INSTR=0x8f8d0008 (10001111100011010000000000001000)
+  #  42 [DECODE] RAW=0x8f8d0008 OP=LW rs=gp rt=t5 imm=8
+  #  43 [FETCH] PC=3132 MAR=3132 INSTR=0x8f8e0008 (10001111100011100000000000001000)
+  #  44 [WRITE-BACK] SW addr=8 value=200 from reg t3
+  #  45 [MEMORY] LW addr=8 value=200 -> t4
+  #  46 [DECODE] RAW=0x8f8e0008 OP=LW rs=gp rt=t6 imm=8
+  #  47 [FETCH] PC=3136 MAR=3136 INSTR=0x18d7820 (00000001100011010111100000100000)
+  #  48 [MEMORY] LW addr=8 value=200 -> t5
+  #  49 [DECODE] RAW=0x18d7820 OP=ADD rs=t4 rt=t5 rd=t7
+  #  50 [FETCH] PC=3140 MAR=3140 INSTR=0xf80f0000 (11111000000011110000000000000000)
+  #  51 [MEMORY] LW addr=8 value=200 -> t6
+  #  52 [ARIT] ADD t7 = t4(200) ADD t5(200) = 400
+  #  53 [DECODE] RAW=0xf80f0000 OP=PRINT rt=t7
+  #  54 [FETCH] PC=3144 MAR=3144 INSTR=0xfc000000 (11111100000000000000000000000000)
 
 ------------------------------------------------------------
 
 === PROCESSO 5: CPU-Bound Process ===
 Estado: Finalizado
-Prioridade: 3 | Quantum: 5
+Prioridade: 3 | Quantum: 1000
+
+[TEMPOS]
+  Espera:        2 ms
+  Resposta:      2 ms
+  Retorno:       2 ms
+
+[CPU]
+  Pipeline Cycles: 19
+  IO Cycles:       1
+
+[MEMÓRIA]
+  Total Acessos:    31
+    - Leituras:     29
+    - Escritas:     2
+  Cache L1:         11
+  RAM (Principal):  20
+  Disco (Secund.):  0
+  Ciclos Memória:   111
+
+[CACHE PERFORMANCE]
+  Hits:   11
+  Misses: 20
+  Taxa:   35.48%
+
+[REGISTRADORES FINAIS]
+========================================
+====== Estado do Banco de Registradores ======
+========================================
+pc    : 0x10480000  (Decimal: 4168)
+ir    : 0xfc000000  (Decimal: -67108864)
+mar   : 0x10480000  (Decimal: 4168)
+sr    : 0x00000000  (Decimal: 0)
+hi    : 0x00000000  (Decimal: 0)
+lo    : 0x00000000  (Decimal: 0)
+----------------------------------------
+zero  : 0x00000000  (Decimal: 0)
+at    : 0x00000000  (Decimal: 0)
+v0    : 0x00000000  (Decimal: 0)
+v1    : 0x00000000  (Decimal: 0)
+a0    : 0x00000000  (Decimal: 0)
+a1    : 0x00000000  (Decimal: 0)
+a2    : 0x00000000  (Decimal: 0)
+a3    : 0x00000000  (Decimal: 0)
+----------------------------------------
+t0    : 0x50000000  (Decimal: 5)
+t1    : 0x50000000  (Decimal: 5)
+t2    : 0x50000000  (Decimal: 5)
+t3    : 0x50000000  (Decimal: 5)
+t4    : 0x50000000  (Decimal: 5)
+t5    : 0x50000000  (Decimal: 5)
+t6    : 0x50000000  (Decimal: 5)
+t7    : 0x14000000  (Decimal: 20)
+t8    : 0x14000000  (Decimal: 20)
+t9    : 0x00000000  (Decimal: 0)
+----------------------------------------
+s0    : 0x14000000  (Decimal: 20)
+s1    : 0x14000000  (Decimal: 20)
+s2    : 0x14000000  (Decimal: 20)
+s3    : 0x19000000  (Decimal: 400)
+s4    : 0x00000000  (Decimal: 0)
+s5    : 0x00000000  (Decimal: 0)
+s6    : 0x00000000  (Decimal: 0)
+s7    : 0x00000000  (Decimal: 0)
+----------------------------------------
+gp    : 0x00000000  (Decimal: 0)
+sp    : 0x00000000  (Decimal: 0)
+fp    : 0x00000000  (Decimal: 0)
+ra    : 0x00000000  (Decimal: 0)
+k0    : 0x00000000  (Decimal: 0)
+k1    : 0x00000000  (Decimal: 0)
+========================================
+
+[INSTRUÇÕES EXECUTADAS]
+  #   1 [FETCH] PC=4096 MAR=4096 INSTR=0x20080005 (00100000000010000000000000000101)
+  #   2 [DECODE] RAW=0x20080005 OP=ADDI rs=zero rt=t0 imm=5
+  #   3 [FETCH] PC=4100 MAR=4100 INSTR=0xaf880000 (10101111100010000000000000000000)
+  #   4 [IMM] ADDI t0 = zero(0) + 5 -> 5
+  #   5 [DECODE] RAW=0xaf880000 OP=SW rs=gp rt=t0 imm=0
+  #   6 [FETCH] PC=4104 MAR=4104 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #   7 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #   8 [FETCH] PC=4108 MAR=4108 INSTR=0x8f8a0000 (10001111100010100000000000000000)
+  #   9 [DECODE] RAW=0x8f8a0000 OP=LW rs=gp rt=t2 imm=0
+  #  10 [FETCH] PC=4112 MAR=4112 INSTR=0x8f8b0000 (10001111100010110000000000000000)
+  #  11 [WRITE-BACK] SW addr=0 value=5 from reg t0
+  #  12 [MEMORY] LW addr=0 value=5 -> t1
+  #  13 [DECODE] RAW=0x8f8b0000 OP=LW rs=gp rt=t3 imm=0
+  #  14 [FETCH] PC=4116 MAR=4116 INSTR=0x8f8c0000 (10001111100011000000000000000000)
+  #  15 [MEMORY] LW addr=0 value=5 -> t2
+  #  16 [DECODE] RAW=0x8f8c0000 OP=LW rs=gp rt=t4 imm=0
+  #  17 [FETCH] PC=4120 MAR=4120 INSTR=0x8f8d0000 (10001111100011010000000000000000)
+  #  18 [MEMORY] LW addr=0 value=5 -> t3
+  #  19 [DECODE] RAW=0x8f8d0000 OP=LW rs=gp rt=t5 imm=0
+  #  20 [FETCH] PC=4124 MAR=4124 INSTR=0x8f8e0000 (10001111100011100000000000000000)
+  #  21 [MEMORY] LW addr=0 value=5 -> t4
+  #  22 [DECODE] RAW=0x8f8e0000 OP=LW rs=gp rt=t6 imm=0
+  #  23 [FETCH] PC=4128 MAR=4128 INSTR=0x12a7820 (00000001001010100111100000100000)
+  #  24 [MEMORY] LW addr=0 value=5 -> t5
+  #  25 [DECODE] RAW=0x12a7820 OP=ADD rs=t1 rt=t2 rd=t7
+  #  26 [FETCH] PC=4132 MAR=4132 INSTR=0x1eb7820 (00000001111010110111100000100000)
+  #  27 [MEMORY] LW addr=0 value=5 -> t6
+  #  28 [ARIT] ADD t7 = t1(5) ADD t2(5) = 10
+  #  29 [DECODE] RAW=0x1eb7820 OP=ADD rs=t7 rt=t3 rd=t7
+  #  30 [FETCH] PC=4136 MAR=4136 INSTR=0x1ec7820 (00000001111011000111100000100000)
+  #  31 [ARIT] ADD t7 = t7(10) ADD t3(5) = 15
+  #  32 [DECODE] RAW=0x1ec7820 OP=ADD rs=t7 rt=t4 rd=t7
+  #  33 [FETCH] PC=4140 MAR=4140 INSTR=0xaf8f0004 (10101111100011110000000000000100)
+  #  34 [ARIT] ADD t7 = t7(15) ADD t4(5) = 20
+  #  35 [DECODE] RAW=0xaf8f0004 OP=SW rs=gp rt=t7 imm=4
+  #  36 [FETCH] PC=4144 MAR=4144 INSTR=0x8f980004 (10001111100110000000000000000100)
+  #  37 [DECODE] RAW=0x8f980004 OP=LW rs=gp rt=t8 imm=4
+  #  38 [FETCH] PC=4148 MAR=4148 INSTR=0x8f900004 (10001111100100000000000000000100)
+  #  39 [DECODE] RAW=0x8f900004 OP=LW rs=gp rt=s0 imm=4
+  #  40 [FETCH] PC=4152 MAR=4152 INSTR=0x8f910004 (10001111100100010000000000000100)
+  #  41 [WRITE-BACK] SW addr=4 value=20 from reg t7
+  #  42 [MEMORY] LW addr=4 value=20 -> t8
+  #  43 [DECODE] RAW=0x8f910004 OP=LW rs=gp rt=s1 imm=4
+  #  44 [FETCH] PC=4156 MAR=4156 INSTR=0x8f920004 (10001111100100100000000000000100)
+  #  45 [MEMORY] LW addr=4 value=20 -> s0
+  #  46 [DECODE] RAW=0x8f920004 OP=LW rs=gp rt=s2 imm=4
+  #  47 [FETCH] PC=4160 MAR=4160 INSTR=0x3109818 (00000011000100001001100000011000)
+  #  48 [MEMORY] LW addr=4 value=20 -> s1
+  #  49 [DECODE] RAW=0x3109818 OP=MULT rs=t8 rt=s0 rd=s3
+  #  50 [FETCH] PC=4164 MAR=4164 INSTR=0xf8130000 (11111000000100110000000000000000)
+  #  51 [MEMORY] LW addr=4 value=20 -> s2
+  #  52 [ARIT] MULT s3 = t8(20) MULT s0(20) = 400
+  #  53 [DECODE] RAW=0xf8130000 OP=PRINT rt=s3
+  #  54 [FETCH] PC=4168 MAR=4168 INSTR=0xfc000000 (11111100000000000000000000000000)
+
+------------------------------------------------------------
+
+=== PROCESSO 6: IO-Bound Process ===
+Estado: Finalizado
+Prioridade: 2 | Quantum: 1000
+
+[TEMPOS]
+  Espera:        2 ms
+  Resposta:      2 ms
+  Retorno:       2 ms
+
+[CPU]
+  Pipeline Cycles: 16
+  IO Cycles:       1
+
+[MEMÓRIA]
+  Total Acessos:    28
+    - Leituras:     27
+    - Escritas:     1
+  Cache L1:         11
+  RAM (Principal):  17
+  Disco (Secund.):  0
+  Ciclos Memória:   96
+
+[CACHE PERFORMANCE]
+  Hits:   10
+  Misses: 18
+  Taxa:   35.71%
+
+[REGISTRADORES FINAIS]
+========================================
+====== Estado do Banco de Registradores ======
+========================================
+pc    : 0x143c0000  (Decimal: 5180)
+ir    : 0xfc000000  (Decimal: -67108864)
+mar   : 0x143c0000  (Decimal: 5180)
+sr    : 0x00000000  (Decimal: 0)
+hi    : 0x00000000  (Decimal: 0)
+lo    : 0x00000000  (Decimal: 0)
+----------------------------------------
+zero  : 0x00000000  (Decimal: 0)
+at    : 0x00000000  (Decimal: 0)
+v0    : 0x00000000  (Decimal: 0)
+v1    : 0x00000000  (Decimal: 0)
+a0    : 0x00000000  (Decimal: 0)
+a1    : 0x00000000  (Decimal: 0)
+a2    : 0x00000000  (Decimal: 0)
+a3    : 0x00000000  (Decimal: 0)
+----------------------------------------
+t0    : 0x2a000000  (Decimal: 42)
+t1    : 0x2a000000  (Decimal: 42)
+t2    : 0x7e000000  (Decimal: 126)
+t3    : 0x00000000  (Decimal: 0)
+t4    : 0x00000000  (Decimal: 0)
+t5    : 0x00000000  (Decimal: 0)
+t6    : 0x00000000  (Decimal: 0)
+t7    : 0x00000000  (Decimal: 0)
+t8    : 0x00000000  (Decimal: 0)
+t9    : 0x00000000  (Decimal: 0)
+----------------------------------------
+s0    : 0x00000000  (Decimal: 0)
+s1    : 0x00000000  (Decimal: 0)
+s2    : 0x00000000  (Decimal: 0)
+s3    : 0x00000000  (Decimal: 0)
+s4    : 0x00000000  (Decimal: 0)
+s5    : 0x00000000  (Decimal: 0)
+s6    : 0x00000000  (Decimal: 0)
+s7    : 0x00000000  (Decimal: 0)
+----------------------------------------
+gp    : 0x00000000  (Decimal: 0)
+sp    : 0x00000000  (Decimal: 0)
+fp    : 0x00000000  (Decimal: 0)
+ra    : 0x00000000  (Decimal: 0)
+k0    : 0x00000000  (Decimal: 0)
+k1    : 0x00000000  (Decimal: 0)
+========================================
+
+[INSTRUÇÕES EXECUTADAS]
+  #   1 [FETCH] PC=5120 MAR=5120 INSTR=0x2008002a (00100000000010000000000000101010)
+  #   2 [DECODE] RAW=0x2008002a OP=ADDI rs=zero rt=t0 imm=42
+  #   3 [FETCH] PC=5124 MAR=5124 INSTR=0xaf880000 (10101111100010000000000000000000)
+  #   4 [IMM] ADDI t0 = zero(0) + 42 -> 42
+  #   5 [DECODE] RAW=0xaf880000 OP=SW rs=gp rt=t0 imm=0
+  #   6 [FETCH] PC=5128 MAR=5128 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #   7 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #   8 [FETCH] PC=5132 MAR=5132 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #   9 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #  10 [FETCH] PC=5136 MAR=5136 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #  11 [WRITE-BACK] SW addr=0 value=42 from reg t0
+  #  12 [MEMORY] LW addr=0 value=42 -> t1
+  #  13 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #  14 [FETCH] PC=5140 MAR=5140 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #  15 [MEMORY] LW addr=0 value=42 -> t1
+  #  16 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #  17 [FETCH] PC=5144 MAR=5144 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #  18 [MEMORY] LW addr=0 value=42 -> t1
+  #  19 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #  20 [FETCH] PC=5148 MAR=5148 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #  21 [MEMORY] LW addr=0 value=42 -> t1
+  #  22 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #  23 [FETCH] PC=5152 MAR=5152 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #  24 [MEMORY] LW addr=0 value=42 -> t1
+  #  25 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #  26 [FETCH] PC=5156 MAR=5156 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #  27 [MEMORY] LW addr=0 value=42 -> t1
+  #  28 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #  29 [FETCH] PC=5160 MAR=5160 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #  30 [MEMORY] LW addr=0 value=42 -> t1
+  #  31 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #  32 [FETCH] PC=5164 MAR=5164 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #  33 [MEMORY] LW addr=0 value=42 -> t1
+  #  34 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #  35 [FETCH] PC=5168 MAR=5168 INSTR=0x1295020 (00000001001010010101000000100000)
+  #  36 [MEMORY] LW addr=0 value=42 -> t1
+  #  37 [DECODE] RAW=0x1295020 OP=ADD rs=t1 rt=t1 rd=t2
+  #  38 [FETCH] PC=5172 MAR=5172 INSTR=0x1495020 (00000001010010010101000000100000)
+  #  39 [MEMORY] LW addr=0 value=42 -> t1
+  #  40 [ARIT] ADD t2 = t1(42) ADD t1(42) = 84
+  #  41 [DECODE] RAW=0x1495020 OP=ADD rs=t2 rt=t1 rd=t2
+  #  42 [FETCH] PC=5176 MAR=5176 INSTR=0xf80a0000 (11111000000010100000000000000000)
+  #  43 [ARIT] ADD t2 = t2(84) ADD t1(42) = 126
+  #  44 [DECODE] RAW=0xf80a0000 OP=PRINT rt=t2
+  #  45 [FETCH] PC=5180 MAR=5180 INSTR=0xfc000000 (11111100000000000000000000000000)
+
+------------------------------------------------------------
+
+=== PROCESSO 7: Memory-Intensive Process ===
+Estado: Finalizado
+Prioridade: 2 | Quantum: 1000
+
+[TEMPOS]
+  Espera:        2 ms
+  Resposta:      2 ms
+  Retorno:       2 ms
+
+[CPU]
+  Pipeline Cycles: 14
+  IO Cycles:       1
+
+[MEMÓRIA]
+  Total Acessos:    25
+    - Leituras:     21
+    - Escritas:     4
+  Cache L1:         8
+  RAM (Principal):  17
+  Disco (Secund.):  0
+  Ciclos Memória:   93
+
+[CACHE PERFORMANCE]
+  Hits:   5
+  Misses: 20
+  Taxa:   20.00%
+
+[REGISTRADORES FINAIS]
+========================================
+====== Estado do Banco de Registradores ======
+========================================
+pc    : 0x18340000  (Decimal: 6196)
+ir    : 0xfc000000  (Decimal: -67108864)
+mar   : 0x18340000  (Decimal: 6196)
+sr    : 0x00000000  (Decimal: 0)
+hi    : 0x00000000  (Decimal: 0)
+lo    : 0x00000000  (Decimal: 0)
+----------------------------------------
+zero  : 0x00000000  (Decimal: 0)
+at    : 0x00000000  (Decimal: 0)
+v0    : 0x00000000  (Decimal: 0)
+v1    : 0x00000000  (Decimal: 0)
+a0    : 0x00000000  (Decimal: 0)
+a1    : 0x00000000  (Decimal: 0)
+a2    : 0x00000000  (Decimal: 0)
+a3    : 0x00000000  (Decimal: 0)
+----------------------------------------
+t0    : 0x10000000  (Decimal: 1)
+t1    : 0x10000000  (Decimal: 1)
+t2    : 0x10000000  (Decimal: 1)
+t3    : 0x10000000  (Decimal: 1)
+t4    : 0x10000000  (Decimal: 1)
+t5    : 0x20000000  (Decimal: 2)
+t6    : 0x20000000  (Decimal: 2)
+t7    : 0x40000000  (Decimal: 4)
+t8    : 0x00000000  (Decimal: 0)
+t9    : 0x00000000  (Decimal: 0)
+----------------------------------------
+s0    : 0x00000000  (Decimal: 0)
+s1    : 0x00000000  (Decimal: 0)
+s2    : 0x00000000  (Decimal: 0)
+s3    : 0x00000000  (Decimal: 0)
+s4    : 0x00000000  (Decimal: 0)
+s5    : 0x00000000  (Decimal: 0)
+s6    : 0x00000000  (Decimal: 0)
+s7    : 0x00000000  (Decimal: 0)
+----------------------------------------
+gp    : 0x00000000  (Decimal: 0)
+sp    : 0x00000000  (Decimal: 0)
+fp    : 0x00000000  (Decimal: 0)
+ra    : 0x00000000  (Decimal: 0)
+k0    : 0x00000000  (Decimal: 0)
+k1    : 0x00000000  (Decimal: 0)
+========================================
+
+[INSTRUÇÕES EXECUTADAS]
+  #   1 [FETCH] PC=6144 MAR=6144 INSTR=0x20080001 (00100000000010000000000000000001)
+  #   2 [DECODE] RAW=0x20080001 OP=ADDI rs=zero rt=t0 imm=1
+  #   3 [FETCH] PC=6148 MAR=6148 INSTR=0xaf880000 (10101111100010000000000000000000)
+  #   4 [IMM] ADDI t0 = zero(0) + 1 -> 1
+  #   5 [DECODE] RAW=0xaf880000 OP=SW rs=gp rt=t0 imm=0
+  #   6 [FETCH] PC=6152 MAR=6152 INSTR=0xaf880064 (10101111100010000000000001100100)
+  #   7 [DECODE] RAW=0xaf880064 OP=SW rs=gp rt=t0 imm=100
+  #   8 [FETCH] PC=6156 MAR=6156 INSTR=0xaf8800c8 (10101111100010000000000011001000)
+  #   9 [DECODE] RAW=0xaf8800c8 OP=SW rs=gp rt=t0 imm=200
+  #  10 [FETCH] PC=6160 MAR=6160 INSTR=0xaf88012c (10101111100010000000000100101100)
+  #  11 [WRITE-BACK] SW addr=0 value=1 from reg t0
+  #  12 [DECODE] RAW=0xaf88012c OP=SW rs=gp rt=t0 imm=300
+  #  13 [FETCH] PC=6164 MAR=6164 INSTR=0x8f890000 (10001111100010010000000000000000)
+  #  14 [WRITE-BACK] SW addr=100 value=1 from reg t0
+  #  15 [DECODE] RAW=0x8f890000 OP=LW rs=gp rt=t1 imm=0
+  #  16 [FETCH] PC=6168 MAR=6168 INSTR=0x8f8a0064 (10001111100010100000000001100100)
+  #  17 [WRITE-BACK] SW addr=200 value=1 from reg t0
+  #  18 [DECODE] RAW=0x8f8a0064 OP=LW rs=gp rt=t2 imm=100
+  #  19 [FETCH] PC=6172 MAR=6172 INSTR=0x8f8b00c8 (10001111100010110000000011001000)
+  #  20 [WRITE-BACK] SW addr=300 value=1 from reg t0
+  #  21 [MEMORY] LW addr=0 value=1 -> t1
+  #  22 [DECODE] RAW=0x8f8b00c8 OP=LW rs=gp rt=t3 imm=200
+  #  23 [FETCH] PC=6176 MAR=6176 INSTR=0x8f8c012c (10001111100011000000000100101100)
+  #  24 [MEMORY] LW addr=100 value=1 -> t2
+  #  25 [DECODE] RAW=0x8f8c012c OP=LW rs=gp rt=t4 imm=300
+  #  26 [FETCH] PC=6180 MAR=6180 INSTR=0x12a6820 (00000001001010100110100000100000)
+  #  27 [MEMORY] LW addr=200 value=1 -> t3
+  #  28 [DECODE] RAW=0x12a6820 OP=ADD rs=t1 rt=t2 rd=t5
+  #  29 [FETCH] PC=6184 MAR=6184 INSTR=0x16c7020 (00000001011011000111000000100000)
+  #  30 [MEMORY] LW addr=300 value=1 -> t4
+  #  31 [ARIT] ADD t5 = t1(1) ADD t2(1) = 2
+  #  32 [DECODE] RAW=0x16c7020 OP=ADD rs=t3 rt=t4 rd=t6
+  #  33 [FETCH] PC=6188 MAR=6188 INSTR=0x1ae7820 (00000001101011100111100000100000)
+  #  34 [ARIT] ADD t6 = t3(1) ADD t4(1) = 2
+  #  35 [DECODE] RAW=0x1ae7820 OP=ADD rs=t5 rt=t6 rd=t7
+  #  36 [FETCH] PC=6192 MAR=6192 INSTR=0xf80f0000 (11111000000011110000000000000000)
+  #  37 [ARIT] ADD t7 = t5(2) ADD t6(2) = 4
+  #  38 [DECODE] RAW=0xf80f0000 OP=PRINT rt=t7
+  #  39 [FETCH] PC=6196 MAR=6196 INSTR=0xfc000000 (11111100000000000000000000000000)
+
+------------------------------------------------------------
+
+=== PROCESSO 8: Balanced Process ===
+Estado: Finalizado
+Prioridade: 2 | Quantum: 1000
 
 [TEMPOS]
   Espera:        2 ms
@@ -241,21 +835,492 @@ Prioridade: 3 | Quantum: 5
   Retorno:       3 ms
 
 [CPU]
-  Pipeline Cycles: 9
+  Pipeline Cycles: 15
   IO Cycles:       1
 
 [MEMÓRIA]
-  Total Acessos:    43
-    - Leituras:     24
-    - Escritas:     19
-  Cache L1:         24
-  RAM (Principal):  19
+  Total Acessos:    26
+    - Leituras:     22
+    - Escritas:     4
+  Cache L1:         8
+  RAM (Principal):  18
   Disco (Secund.):  0
-  Ciclos Memória:   119
+  Ciclos Memória:   98
 
 [CACHE PERFORMANCE]
   Hits:   5
-  Misses: 38
-  Taxa:   11.63%
+  Misses: 21
+  Taxa:   19.23%
+
+[REGISTRADORES FINAIS]
+========================================
+====== Estado do Banco de Registradores ======
+========================================
+pc    : 0x1c380000  (Decimal: 7224)
+ir    : 0xfc000000  (Decimal: -67108864)
+mar   : 0x1c380000  (Decimal: 7224)
+sr    : 0x00000000  (Decimal: 0)
+hi    : 0x00000000  (Decimal: 0)
+lo    : 0x00000000  (Decimal: 0)
+----------------------------------------
+zero  : 0x00000000  (Decimal: 0)
+at    : 0x00000000  (Decimal: 0)
+v0    : 0x00000000  (Decimal: 0)
+v1    : 0x00000000  (Decimal: 0)
+a0    : 0x00000000  (Decimal: 0)
+a1    : 0x00000000  (Decimal: 0)
+a2    : 0x00000000  (Decimal: 0)
+a3    : 0x00000000  (Decimal: 0)
+----------------------------------------
+t0    : 0xf0000000  (Decimal: 15)
+t1    : 0x19000000  (Decimal: 25)
+t2    : 0xf0000000  (Decimal: 15)
+t3    : 0x19000000  (Decimal: 25)
+t4    : 0x28000000  (Decimal: 40)
+t5    : 0x17700000  (Decimal: 375)
+t6    : 0x28000000  (Decimal: 40)
+t7    : 0x17700000  (Decimal: 375)
+t8    : 0x14f00000  (Decimal: 335)
+t9    : 0x00000000  (Decimal: 0)
+----------------------------------------
+s0    : 0x00000000  (Decimal: 0)
+s1    : 0x00000000  (Decimal: 0)
+s2    : 0x00000000  (Decimal: 0)
+s3    : 0x00000000  (Decimal: 0)
+s4    : 0x00000000  (Decimal: 0)
+s5    : 0x00000000  (Decimal: 0)
+s6    : 0x00000000  (Decimal: 0)
+s7    : 0x00000000  (Decimal: 0)
+----------------------------------------
+gp    : 0x00000000  (Decimal: 0)
+sp    : 0x00000000  (Decimal: 0)
+fp    : 0x00000000  (Decimal: 0)
+ra    : 0x00000000  (Decimal: 0)
+k0    : 0x00000000  (Decimal: 0)
+k1    : 0x00000000  (Decimal: 0)
+========================================
+
+[INSTRUÇÕES EXECUTADAS]
+  #   1 [FETCH] PC=7168 MAR=7168 INSTR=0x2008000f (00100000000010000000000000001111)
+  #   2 [DECODE] RAW=0x2008000f OP=ADDI rs=zero rt=t0 imm=15
+  #   3 [FETCH] PC=7172 MAR=7172 INSTR=0x20090019 (00100000000010010000000000011001)
+  #   4 [IMM] ADDI t0 = zero(0) + 15 -> 15
+  #   5 [DECODE] RAW=0x20090019 OP=ADDI rs=zero rt=t1 imm=25
+  #   6 [FETCH] PC=7176 MAR=7176 INSTR=0xaf880000 (10101111100010000000000000000000)
+  #   7 [IMM] ADDI t1 = zero(0) + 25 -> 25
+  #   8 [DECODE] RAW=0xaf880000 OP=SW rs=gp rt=t0 imm=0
+  #   9 [FETCH] PC=7180 MAR=7180 INSTR=0xaf890004 (10101111100010010000000000000100)
+  #  10 [DECODE] RAW=0xaf890004 OP=SW rs=gp rt=t1 imm=4
+  #  11 [FETCH] PC=7184 MAR=7184 INSTR=0x8f8a0000 (10001111100010100000000000000000)
+  #  12 [DECODE] RAW=0x8f8a0000 OP=LW rs=gp rt=t2 imm=0
+  #  13 [FETCH] PC=7188 MAR=7188 INSTR=0x8f8b0004 (10001111100010110000000000000100)
+  #  14 [WRITE-BACK] SW addr=0 value=15 from reg t0
+  #  15 [DECODE] RAW=0x8f8b0004 OP=LW rs=gp rt=t3 imm=4
+  #  16 [FETCH] PC=7192 MAR=7192 INSTR=0x14b6020 (00000001010010110110000000100000)
+  #  17 [WRITE-BACK] SW addr=4 value=25 from reg t1
+  #  18 [MEMORY] LW addr=0 value=15 -> t2
+  #  19 [DECODE] RAW=0x14b6020 OP=ADD rs=t2 rt=t3 rd=t4
+  #  20 [FETCH] PC=7196 MAR=7196 INSTR=0x14b6818 (00000001010010110110100000011000)
+  #  21 [MEMORY] LW addr=4 value=25 -> t3
+  #  22 [ARIT] ADD t4 = t2(15) ADD t3(25) = 40
+  #  23 [DECODE] RAW=0x14b6818 OP=MULT rs=t2 rt=t3 rd=t5
+  #  24 [FETCH] PC=7200 MAR=7200 INSTR=0xaf8c0008 (10101111100011000000000000001000)
+  #  25 [ARIT] MULT t5 = t2(15) MULT t3(25) = 375
+  #  26 [DECODE] RAW=0xaf8c0008 OP=SW rs=gp rt=t4 imm=8
+  #  27 [FETCH] PC=7204 MAR=7204 INSTR=0xaf8d000c (10101111100011010000000000001100)
+  #  28 [DECODE] RAW=0xaf8d000c OP=SW rs=gp rt=t5 imm=12
+  #  29 [FETCH] PC=7208 MAR=7208 INSTR=0x8f8e0008 (10001111100011100000000000001000)
+  #  30 [DECODE] RAW=0x8f8e0008 OP=LW rs=gp rt=t6 imm=8
+  #  31 [FETCH] PC=7212 MAR=7212 INSTR=0x8f8f000c (10001111100011110000000000001100)
+  #  32 [WRITE-BACK] SW addr=8 value=40 from reg t4
+  #  33 [DECODE] RAW=0x8f8f000c OP=LW rs=gp rt=t7 imm=12
+  #  34 [FETCH] PC=7216 MAR=7216 INSTR=0x1eec022 (00000001111011101100000000100010)
+  #  35 [WRITE-BACK] SW addr=12 value=375 from reg t5
+  #  36 [MEMORY] LW addr=8 value=40 -> t6
+  #  37 [DECODE] RAW=0x1eec022 OP=SUB rs=t7 rt=t6 rd=t8
+  #  38 [FETCH] PC=7220 MAR=7220 INSTR=0xf8180000 (11111000000110000000000000000000)
+  #  39 [MEMORY] LW addr=12 value=375 -> t7
+  #  40 [ARIT] SUB t8 = t7(375) SUB t6(40) = 335
+  #  41 [DECODE] RAW=0xf8180000 OP=PRINT rt=t8
+  #  42 [FETCH] PC=7224 MAR=7224 INSTR=0xfc000000 (11111100000000000000000000000000)
+
+------------------------------------------------------------
+
+=== PROCESSO 9: Loop-Heavy Process ===
+Estado: Finalizado
+Prioridade: 1 | Quantum: 1000
+
+[TEMPOS]
+  Espera:        2 ms
+  Resposta:      2 ms
+  Retorno:       4 ms
+
+[CPU]
+  Pipeline Cycles: 101
+  IO Cycles:       1
+
+[MEMÓRIA]
+  Total Acessos:    101
+    - Leituras:     101
+    - Escritas:     0
+  Cache L1:         0
+  RAM (Principal):  0
+  Disco (Secund.):  101
+  Ciclos Memória:   1010
+
+[CACHE PERFORMANCE]
+  Hits:   0
+  Misses: 101
+  Taxa:   0.00%
+
+[REGISTRADORES FINAIS]
+========================================
+====== Estado do Banco de Registradores ======
+========================================
+pc    : 0x21900000  (Decimal: 8592)
+ir    : 0xfc000000  (Decimal: -67108864)
+mar   : 0x21900000  (Decimal: 8592)
+sr    : 0x00000000  (Decimal: 0)
+hi    : 0x00000000  (Decimal: 0)
+lo    : 0x00000000  (Decimal: 0)
+----------------------------------------
+zero  : 0x00000000  (Decimal: 0)
+at    : 0x00000000  (Decimal: 0)
+v0    : 0x00000000  (Decimal: 0)
+v1    : 0x00000000  (Decimal: 0)
+a0    : 0x00000000  (Decimal: 0)
+a1    : 0x00000000  (Decimal: 0)
+a2    : 0x00000000  (Decimal: 0)
+a3    : 0x00000000  (Decimal: 0)
+----------------------------------------
+t0    : 0x61000000  (Decimal: 97)
+t1    : 0x10000000  (Decimal: 1)
+t2    : 0x00000000  (Decimal: 0)
+t3    : 0x00000000  (Decimal: 0)
+t4    : 0x00000000  (Decimal: 0)
+t5    : 0x00000000  (Decimal: 0)
+t6    : 0x00000000  (Decimal: 0)
+t7    : 0x00000000  (Decimal: 0)
+t8    : 0x00000000  (Decimal: 0)
+t9    : 0x00000000  (Decimal: 0)
+----------------------------------------
+s0    : 0x00000000  (Decimal: 0)
+s1    : 0x00000000  (Decimal: 0)
+s2    : 0x00000000  (Decimal: 0)
+s3    : 0x00000000  (Decimal: 0)
+s4    : 0x00000000  (Decimal: 0)
+s5    : 0x00000000  (Decimal: 0)
+s6    : 0x00000000  (Decimal: 0)
+s7    : 0x00000000  (Decimal: 0)
+----------------------------------------
+gp    : 0x00000000  (Decimal: 0)
+sp    : 0x00000000  (Decimal: 0)
+fp    : 0x00000000  (Decimal: 0)
+ra    : 0x00000000  (Decimal: 0)
+k0    : 0x00000000  (Decimal: 0)
+k1    : 0x00000000  (Decimal: 0)
+========================================
+
+[INSTRUÇÕES EXECUTADAS]
+  #   1 [FETCH] PC=8192 MAR=8192 INSTR=0x20080000 (00100000000010000000000000000000)
+  #   2 [DECODE] RAW=0x20080000 OP=ADDI rs=zero rt=t0 imm=0
+  #   3 [FETCH] PC=8196 MAR=8196 INSTR=0x20090001 (00100000000010010000000000000001)
+  #   4 [IMM] ADDI t0 = zero(0) + 0 -> 0
+  #   5 [DECODE] RAW=0x20090001 OP=ADDI rs=zero rt=t1 imm=1
+  #   6 [FETCH] PC=8200 MAR=8200 INSTR=0x1094020 (00000001000010010100000000100000)
+  #   7 [IMM] ADDI t1 = zero(0) + 1 -> 1
+  #   8 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #   9 [FETCH] PC=8204 MAR=8204 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  10 [ARIT] ADD t0 = t0(0) ADD t1(1) = 1
+  #  11 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  12 [FETCH] PC=8208 MAR=8208 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  13 [ARIT] ADD t0 = t0(1) ADD t1(1) = 2
+  #  14 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  15 [FETCH] PC=8212 MAR=8212 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  16 [ARIT] ADD t0 = t0(2) ADD t1(1) = 3
+  #  17 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  18 [FETCH] PC=8216 MAR=8216 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  19 [ARIT] ADD t0 = t0(3) ADD t1(1) = 4
+  #  20 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  21 [FETCH] PC=8220 MAR=8220 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  22 [ARIT] ADD t0 = t0(4) ADD t1(1) = 5
+  #  23 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  24 [FETCH] PC=8224 MAR=8224 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  25 [ARIT] ADD t0 = t0(5) ADD t1(1) = 6
+  #  26 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  27 [FETCH] PC=8228 MAR=8228 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  28 [ARIT] ADD t0 = t0(6) ADD t1(1) = 7
+  #  29 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  30 [FETCH] PC=8232 MAR=8232 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  31 [ARIT] ADD t0 = t0(7) ADD t1(1) = 8
+  #  32 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  33 [FETCH] PC=8236 MAR=8236 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  34 [ARIT] ADD t0 = t0(8) ADD t1(1) = 9
+  #  35 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  36 [FETCH] PC=8240 MAR=8240 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  37 [ARIT] ADD t0 = t0(9) ADD t1(1) = 10
+  #  38 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  39 [FETCH] PC=8244 MAR=8244 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  40 [ARIT] ADD t0 = t0(10) ADD t1(1) = 11
+  #  41 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  42 [FETCH] PC=8248 MAR=8248 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  43 [ARIT] ADD t0 = t0(11) ADD t1(1) = 12
+  #  44 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  45 [FETCH] PC=8252 MAR=8252 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  46 [ARIT] ADD t0 = t0(12) ADD t1(1) = 13
+  #  47 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  48 [FETCH] PC=8256 MAR=8256 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  49 [ARIT] ADD t0 = t0(13) ADD t1(1) = 14
+  #  50 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  51 [FETCH] PC=8260 MAR=8260 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  52 [ARIT] ADD t0 = t0(14) ADD t1(1) = 15
+  #  53 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  54 [FETCH] PC=8264 MAR=8264 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  55 [ARIT] ADD t0 = t0(15) ADD t1(1) = 16
+  #  56 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  57 [FETCH] PC=8268 MAR=8268 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  58 [ARIT] ADD t0 = t0(16) ADD t1(1) = 17
+  #  59 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  60 [FETCH] PC=8272 MAR=8272 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  61 [ARIT] ADD t0 = t0(17) ADD t1(1) = 18
+  #  62 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  63 [FETCH] PC=8276 MAR=8276 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  64 [ARIT] ADD t0 = t0(18) ADD t1(1) = 19
+  #  65 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  66 [FETCH] PC=8280 MAR=8280 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  67 [ARIT] ADD t0 = t0(19) ADD t1(1) = 20
+  #  68 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  69 [FETCH] PC=8284 MAR=8284 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  70 [ARIT] ADD t0 = t0(20) ADD t1(1) = 21
+  #  71 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  72 [FETCH] PC=8288 MAR=8288 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  73 [ARIT] ADD t0 = t0(21) ADD t1(1) = 22
+  #  74 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  75 [FETCH] PC=8292 MAR=8292 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  76 [ARIT] ADD t0 = t0(22) ADD t1(1) = 23
+  #  77 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  78 [FETCH] PC=8296 MAR=8296 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  79 [ARIT] ADD t0 = t0(23) ADD t1(1) = 24
+  #  80 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  81 [FETCH] PC=8300 MAR=8300 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  82 [ARIT] ADD t0 = t0(24) ADD t1(1) = 25
+  #  83 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  84 [FETCH] PC=8304 MAR=8304 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  85 [ARIT] ADD t0 = t0(25) ADD t1(1) = 26
+  #  86 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  87 [FETCH] PC=8308 MAR=8308 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  88 [ARIT] ADD t0 = t0(26) ADD t1(1) = 27
+  #  89 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  90 [FETCH] PC=8312 MAR=8312 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  91 [ARIT] ADD t0 = t0(27) ADD t1(1) = 28
+  #  92 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  93 [FETCH] PC=8316 MAR=8316 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  94 [ARIT] ADD t0 = t0(28) ADD t1(1) = 29
+  #  95 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  96 [FETCH] PC=8320 MAR=8320 INSTR=0x1094020 (00000001000010010100000000100000)
+  #  97 [ARIT] ADD t0 = t0(29) ADD t1(1) = 30
+  #  98 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  #  99 [FETCH] PC=8324 MAR=8324 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 100 [ARIT] ADD t0 = t0(30) ADD t1(1) = 31
+  # 101 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 102 [FETCH] PC=8328 MAR=8328 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 103 [ARIT] ADD t0 = t0(31) ADD t1(1) = 32
+  # 104 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 105 [FETCH] PC=8332 MAR=8332 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 106 [ARIT] ADD t0 = t0(32) ADD t1(1) = 33
+  # 107 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 108 [FETCH] PC=8336 MAR=8336 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 109 [ARIT] ADD t0 = t0(33) ADD t1(1) = 34
+  # 110 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 111 [FETCH] PC=8340 MAR=8340 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 112 [ARIT] ADD t0 = t0(34) ADD t1(1) = 35
+  # 113 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 114 [FETCH] PC=8344 MAR=8344 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 115 [ARIT] ADD t0 = t0(35) ADD t1(1) = 36
+  # 116 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 117 [FETCH] PC=8348 MAR=8348 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 118 [ARIT] ADD t0 = t0(36) ADD t1(1) = 37
+  # 119 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 120 [FETCH] PC=8352 MAR=8352 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 121 [ARIT] ADD t0 = t0(37) ADD t1(1) = 38
+  # 122 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 123 [FETCH] PC=8356 MAR=8356 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 124 [ARIT] ADD t0 = t0(38) ADD t1(1) = 39
+  # 125 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 126 [FETCH] PC=8360 MAR=8360 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 127 [ARIT] ADD t0 = t0(39) ADD t1(1) = 40
+  # 128 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 129 [FETCH] PC=8364 MAR=8364 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 130 [ARIT] ADD t0 = t0(40) ADD t1(1) = 41
+  # 131 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 132 [FETCH] PC=8368 MAR=8368 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 133 [ARIT] ADD t0 = t0(41) ADD t1(1) = 42
+  # 134 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 135 [FETCH] PC=8372 MAR=8372 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 136 [ARIT] ADD t0 = t0(42) ADD t1(1) = 43
+  # 137 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 138 [FETCH] PC=8376 MAR=8376 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 139 [ARIT] ADD t0 = t0(43) ADD t1(1) = 44
+  # 140 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 141 [FETCH] PC=8380 MAR=8380 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 142 [ARIT] ADD t0 = t0(44) ADD t1(1) = 45
+  # 143 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 144 [FETCH] PC=8384 MAR=8384 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 145 [ARIT] ADD t0 = t0(45) ADD t1(1) = 46
+  # 146 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 147 [FETCH] PC=8388 MAR=8388 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 148 [ARIT] ADD t0 = t0(46) ADD t1(1) = 47
+  # 149 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 150 [FETCH] PC=8392 MAR=8392 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 151 [ARIT] ADD t0 = t0(47) ADD t1(1) = 48
+  # 152 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 153 [FETCH] PC=8396 MAR=8396 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 154 [ARIT] ADD t0 = t0(48) ADD t1(1) = 49
+  # 155 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 156 [FETCH] PC=8400 MAR=8400 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 157 [ARIT] ADD t0 = t0(49) ADD t1(1) = 50
+  # 158 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 159 [FETCH] PC=8404 MAR=8404 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 160 [ARIT] ADD t0 = t0(50) ADD t1(1) = 51
+  # 161 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 162 [FETCH] PC=8408 MAR=8408 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 163 [ARIT] ADD t0 = t0(51) ADD t1(1) = 52
+  # 164 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 165 [FETCH] PC=8412 MAR=8412 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 166 [ARIT] ADD t0 = t0(52) ADD t1(1) = 53
+  # 167 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 168 [FETCH] PC=8416 MAR=8416 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 169 [ARIT] ADD t0 = t0(53) ADD t1(1) = 54
+  # 170 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 171 [FETCH] PC=8420 MAR=8420 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 172 [ARIT] ADD t0 = t0(54) ADD t1(1) = 55
+  # 173 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 174 [FETCH] PC=8424 MAR=8424 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 175 [ARIT] ADD t0 = t0(55) ADD t1(1) = 56
+  # 176 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 177 [FETCH] PC=8428 MAR=8428 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 178 [ARIT] ADD t0 = t0(56) ADD t1(1) = 57
+  # 179 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 180 [FETCH] PC=8432 MAR=8432 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 181 [ARIT] ADD t0 = t0(57) ADD t1(1) = 58
+  # 182 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 183 [FETCH] PC=8436 MAR=8436 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 184 [ARIT] ADD t0 = t0(58) ADD t1(1) = 59
+  # 185 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 186 [FETCH] PC=8440 MAR=8440 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 187 [ARIT] ADD t0 = t0(59) ADD t1(1) = 60
+  # 188 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 189 [FETCH] PC=8444 MAR=8444 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 190 [ARIT] ADD t0 = t0(60) ADD t1(1) = 61
+  # 191 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 192 [FETCH] PC=8448 MAR=8448 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 193 [ARIT] ADD t0 = t0(61) ADD t1(1) = 62
+  # 194 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 195 [FETCH] PC=8452 MAR=8452 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 196 [ARIT] ADD t0 = t0(62) ADD t1(1) = 63
+  # 197 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 198 [FETCH] PC=8456 MAR=8456 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 199 [ARIT] ADD t0 = t0(63) ADD t1(1) = 64
+  # 200 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 201 [FETCH] PC=8460 MAR=8460 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 202 [ARIT] ADD t0 = t0(64) ADD t1(1) = 65
+  # 203 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 204 [FETCH] PC=8464 MAR=8464 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 205 [ARIT] ADD t0 = t0(65) ADD t1(1) = 66
+  # 206 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 207 [FETCH] PC=8468 MAR=8468 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 208 [ARIT] ADD t0 = t0(66) ADD t1(1) = 67
+  # 209 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 210 [FETCH] PC=8472 MAR=8472 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 211 [ARIT] ADD t0 = t0(67) ADD t1(1) = 68
+  # 212 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 213 [FETCH] PC=8476 MAR=8476 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 214 [ARIT] ADD t0 = t0(68) ADD t1(1) = 69
+  # 215 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 216 [FETCH] PC=8480 MAR=8480 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 217 [ARIT] ADD t0 = t0(69) ADD t1(1) = 70
+  # 218 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 219 [FETCH] PC=8484 MAR=8484 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 220 [ARIT] ADD t0 = t0(70) ADD t1(1) = 71
+  # 221 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 222 [FETCH] PC=8488 MAR=8488 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 223 [ARIT] ADD t0 = t0(71) ADD t1(1) = 72
+  # 224 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 225 [FETCH] PC=8492 MAR=8492 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 226 [ARIT] ADD t0 = t0(72) ADD t1(1) = 73
+  # 227 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 228 [FETCH] PC=8496 MAR=8496 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 229 [ARIT] ADD t0 = t0(73) ADD t1(1) = 74
+  # 230 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 231 [FETCH] PC=8500 MAR=8500 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 232 [ARIT] ADD t0 = t0(74) ADD t1(1) = 75
+  # 233 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 234 [FETCH] PC=8504 MAR=8504 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 235 [ARIT] ADD t0 = t0(75) ADD t1(1) = 76
+  # 236 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 237 [FETCH] PC=8508 MAR=8508 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 238 [ARIT] ADD t0 = t0(76) ADD t1(1) = 77
+  # 239 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 240 [FETCH] PC=8512 MAR=8512 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 241 [ARIT] ADD t0 = t0(77) ADD t1(1) = 78
+  # 242 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 243 [FETCH] PC=8516 MAR=8516 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 244 [ARIT] ADD t0 = t0(78) ADD t1(1) = 79
+  # 245 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 246 [FETCH] PC=8520 MAR=8520 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 247 [ARIT] ADD t0 = t0(79) ADD t1(1) = 80
+  # 248 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 249 [FETCH] PC=8524 MAR=8524 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 250 [ARIT] ADD t0 = t0(80) ADD t1(1) = 81
+  # 251 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 252 [FETCH] PC=8528 MAR=8528 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 253 [ARIT] ADD t0 = t0(81) ADD t1(1) = 82
+  # 254 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 255 [FETCH] PC=8532 MAR=8532 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 256 [ARIT] ADD t0 = t0(82) ADD t1(1) = 83
+  # 257 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 258 [FETCH] PC=8536 MAR=8536 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 259 [ARIT] ADD t0 = t0(83) ADD t1(1) = 84
+  # 260 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 261 [FETCH] PC=8540 MAR=8540 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 262 [ARIT] ADD t0 = t0(84) ADD t1(1) = 85
+  # 263 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 264 [FETCH] PC=8544 MAR=8544 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 265 [ARIT] ADD t0 = t0(85) ADD t1(1) = 86
+  # 266 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 267 [FETCH] PC=8548 MAR=8548 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 268 [ARIT] ADD t0 = t0(86) ADD t1(1) = 87
+  # 269 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 270 [FETCH] PC=8552 MAR=8552 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 271 [ARIT] ADD t0 = t0(87) ADD t1(1) = 88
+  # 272 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 273 [FETCH] PC=8556 MAR=8556 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 274 [ARIT] ADD t0 = t0(88) ADD t1(1) = 89
+  # 275 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 276 [FETCH] PC=8560 MAR=8560 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 277 [ARIT] ADD t0 = t0(89) ADD t1(1) = 90
+  # 278 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 279 [FETCH] PC=8564 MAR=8564 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 280 [ARIT] ADD t0 = t0(90) ADD t1(1) = 91
+  # 281 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 282 [FETCH] PC=8568 MAR=8568 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 283 [ARIT] ADD t0 = t0(91) ADD t1(1) = 92
+  # 284 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 285 [FETCH] PC=8572 MAR=8572 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 286 [ARIT] ADD t0 = t0(92) ADD t1(1) = 93
+  # 287 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 288 [FETCH] PC=8576 MAR=8576 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 289 [ARIT] ADD t0 = t0(93) ADD t1(1) = 94
+  # 290 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 291 [FETCH] PC=8580 MAR=8580 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 292 [ARIT] ADD t0 = t0(94) ADD t1(1) = 95
+  # 293 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 294 [FETCH] PC=8584 MAR=8584 INSTR=0x1094020 (00000001000010010100000000100000)
+  # 295 [ARIT] ADD t0 = t0(95) ADD t1(1) = 96
+  # 296 [DECODE] RAW=0x1094020 OP=ADD rs=t0 rt=t1 rd=t0
+  # 297 [FETCH] PC=8588 MAR=8588 INSTR=0xf8080000 (11111000000010000000000000000000)
+  # 298 [ARIT] ADD t0 = t0(96) ADD t1(1) = 97
+  # 299 [DECODE] RAW=0xf8080000 OP=PRINT rt=t0
+  # 300 [FETCH] PC=8592 MAR=8592 INSTR=0xfc000000 (11111100000000000000000000000000)
 
 ------------------------------------------------------------

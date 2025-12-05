@@ -1,6 +1,6 @@
 {
   "pid": 4,
   "name": "Long Process",
-  "quantum": 5,
+  "quantum": 1000,
   "priority": 1
 }

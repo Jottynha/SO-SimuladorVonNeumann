@@ -302,6 +302,19 @@ void print_metrics(const PCB& pcb, std::ofstream& outFile) {
     outFile << "  Misses: " << cache_misses << "\n";
     outFile << "  Taxa:   " << std::fixed << std::setprecision(2) << hit_rate << "%\n";
     
+    outFile << "\n[REGISTRADORES FINAIS]\n";
+    outFile << pcb.regBank.get_registers_as_string();
+
+    outFile << "\n[INSTRUÇÕES EXECUTADAS]\n";
+    if (pcb.execution_log.empty()) {
+        outFile << "  Nenhuma instrução registrada.\n";
+    } else {
+        size_t idx = 1;
+        for (const auto& entry : pcb.execution_log) {
+            outFile << "  #" << std::setw(4) << idx++ << " " << entry << "\n";
+        }
+    }
+
     outFile << "\n" << std::string(60, '-') << "\n";
 }
 
@@ -322,6 +335,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     std::cout << "   [1/9] Carregando Quick Process... ";
     auto p1 = std::make_unique<PCB>();
     if (load_pcb_from_json(config_dir + "/process_quick.json", *p1)) {
+        p1->execution_log.clear(); // Limpar log antes de carregar
+        p1->base_address = 0;  // Endereço base do processo
+        p1->regBank.reset();  // Reset dos registradores
+        p1->regBank.pc.write(p1->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_quick.json", memManager, *p1, 0);
         process_list.push_back(std::move(p1));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -334,6 +351,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     std::cout << "   [2/9] Carregando Short Process... ";
     auto p2 = std::make_unique<PCB>();
     if (load_pcb_from_json(config_dir + "/process_short.json", *p2)) {
+        p2->execution_log.clear(); // Limpar log antes de carregar
+        p2->base_address = 1024;  // Endereço base do processo
+        p2->regBank.reset();  // Reset dos registradores
+        p2->regBank.pc.write(p2->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_short.json", memManager, *p2, 1024);
         process_list.push_back(std::move(p2));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -346,6 +367,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     std::cout << "   [3/9] Carregando Medium Process... ";
     auto p3 = std::make_unique<PCB>();
     if (load_pcb_from_json(config_dir + "/process_medium.json", *p3)) {
+        p3->execution_log.clear(); // Limpar log antes de carregar
+        p3->base_address = 2048;  // Endereço base do processo
+        p3->regBank.reset();  // Reset dos registradores
+        p3->regBank.pc.write(p3->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_medium.json", memManager, *p3, 2048);
         process_list.push_back(std::move(p3));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -358,6 +383,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     std::cout << "   [4/9] Carregando Long Process... ";
     auto p4 = std::make_unique<PCB>();
     if (load_pcb_from_json(config_dir + "/process_long.json", *p4)) {
+        p4->execution_log.clear(); // Limpar log antes de carregar
+        p4->base_address = 3072;  // Endereço base do processo
+        p4->regBank.reset();  // Reset dos registradores
+        p4->regBank.pc.write(p4->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_long.json", memManager, *p4, 3072);
         process_list.push_back(std::move(p4));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -370,6 +399,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     std::cout << "   [5/9] Carregando CPU-Bound Process... ";
     auto p5 = std::make_unique<PCB>();
     if (load_pcb_from_json(config_dir + "/process_cpu_bound.json", *p5)) {
+        p5->execution_log.clear(); // Limpar log antes de carregar
+        p5->base_address = 4096;  // Endereço base do processo
+        p5->regBank.reset();  // Reset dos registradores
+        p5->regBank.pc.write(p5->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_cpu_bound.json", memManager, *p5, 4096);
         process_list.push_back(std::move(p5));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -382,6 +415,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     std::cout << "   [6/9] Carregando IO-Bound Process... ";
     auto p6 = std::make_unique<PCB>();
     if (load_pcb_from_json(config_dir + "/process_io_bound.json", *p6)) {
+        p6->execution_log.clear(); // Limpar log antes de carregar
+        p6->base_address = 5120;  // Endereço base do processo
+        p6->regBank.reset();  // Reset dos registradores
+        p6->regBank.pc.write(p6->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_io_bound.json", memManager, *p6, 5120);
         process_list.push_back(std::move(p6));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -394,6 +431,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     std::cout << "   [7/9] Carregando Memory-Intensive Process... ";
     auto p7 = std::make_unique<PCB>();
     if (load_pcb_from_json(config_dir + "/process_memory_intensive.json", *p7)) {
+        p7->execution_log.clear(); // Limpar log antes de carregar
+        p7->base_address = 6144;  // Endereço base do processo
+        p7->regBank.reset();  // Reset dos registradores
+        p7->regBank.pc.write(p7->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_memory_intensive.json", memManager, *p7, 6144);
         process_list.push_back(std::move(p7));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -406,6 +447,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     std::cout << "   [8/9] Carregando Balanced Process... ";
     auto p8 = std::make_unique<PCB>();
     if (load_pcb_from_json(config_dir + "/process_balanced.json", *p8)) {
+        p8->execution_log.clear(); // Limpar log antes de carregar
+        p8->base_address = 7168;  // Endereço base do processo
+        p8->regBank.reset();  // Reset dos registradores
+        p8->regBank.pc.write(p8->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_balanced.json", memManager, *p8, 7168);
         process_list.push_back(std::move(p8));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -419,6 +464,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     auto p9 = std::make_unique<PCB>();
     bool loaded = load_pcb_from_json(config_dir + "/process_loop_heavy.json", *p9);
     if (loaded) {
+        p9->execution_log.clear(); // Limpar log antes de carregar
+        p9->base_address = 8192;  // Endereço base do processo
+        p9->regBank.reset();  // Reset dos registradores
+        p9->regBank.pc.write(p9->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_loop_heavy.json", memManager, *p9, 8192);
         process_list.push_back(std::move(p9));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -475,6 +524,9 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
     int max_iterations = 10000;
     int iteration_count = 0;
     
+    // Debug: contadores por processo
+    std::map<int, int> process_exec_count;
+    
     while (finished_processes < total_processes && iteration_count < max_iterations) {
         iteration_count++;
         
@@ -502,6 +554,9 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
             current_process->start_time = std::chrono::high_resolution_clock::now();
             current_process->first_run = false;
             
+            // Inicializar PC com o endereço base do processo
+            current_process->regBank.pc.write(current_process->base_address);
+            
             // **IMPORTANTE**: Simular cache cold start para processos novos
             // Cada processo novo "polui" a cache parcialmente ao carregar suas instruções/dados
             memManager.simulateContextSwitchLight();  // Invalidação leve (10%)
@@ -510,11 +565,14 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
         current_process->state = State::Running;
 
         std::vector<std::unique_ptr<IORequest>> io_requests;
-        bool print_lock = true;
+        bool print_lock = false;  // Desabilitado para evitar bloqueio em PRINT
 
         int before_instr = current_process->instruction_count;
         size_t before_log = current_process->execution_log.size();
 
+        // Debug: incrementar contador
+        process_exec_count[current_process->pid]++;
+        
         Core(memManager, *current_process, &io_requests, print_lock);
 
         if (current_process->state == State::Blocked) {
@@ -562,6 +620,9 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
         } else {
             bool progressed = (current_process->instruction_count > before_instr) || 
                             (current_process->execution_log.size() > before_log);
+            
+            // Remover logging de debug excessivo
+            
             if (progressed) {
                 current_process->stagnation_counter = 0;
             } else {
@@ -746,7 +807,7 @@ SchedulerMetrics run_multicore_scheduler(int num_cores, SchedulerType scheduler_
             core_metrics[core_id].busy_cycles.fetch_add(1);
             
             std::vector<std::unique_ptr<IORequest>> io_requests;
-            bool print_lock = true;
+            bool print_lock = false;  // Desabilitado para evitar bloqueio em PRINT
             
             int before_instr = current_process->instruction_count;
             size_t before_log = current_process->execution_log.size();
