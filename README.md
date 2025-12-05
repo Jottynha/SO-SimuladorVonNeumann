@@ -939,22 +939,63 @@ make test_metrics  # Teste de métricas da CPU
 
 ### Gerando Gráficos de Análise
 
-Após executar o simulador com a opção 5, você pode gerar gráficos:
+Após executar o simulador, você pode gerar análises visuais:
+
+#### Análise Básica
 
 ```bash
-# Instalar dependências (primeira vez)
+# Instalar dependências Python (primeira vez)
 make install-deps
 
-# Gerar gráficos
+# Gerar gráficos padrão
 make plots
 ```
 
-Os gráficos serão salvos em `plots/`:
+**Gráficos gerados:**
 - Comparação de tempos de execução
-- Utilização de CPU por escalonador
+- Utilização de CPU por escalonador  
 - Cache hit rate
 - Context switches
-- E mais...
+- Métricas de desempenho
+
+#### Análise Estendida (Recomendado)
+
+Para análises detalhadas de **degradação de desempenho** e **comparações single vs multi-core**:
+
+```bash
+# 1. Execute com single-core (baseline)
+make run
+# Digite: 1, n, 5
+
+# 2. Execute com multi-core
+make run
+# Digite: 8, y, 5
+
+# 3. Gere análise estendida
+make plots-extended
+```
+
+**Análises geradas:**
+
+| Gráfico | Descrição |
+|---------|-----------|
+| `extended_01_scheduler_degradation.png` | **Onde cada escalonador perde/ganha desempenho**<br>• Speedup individual por escalonador<br>• Cache pollution (degradação de hit rate)<br>• Ganho de throughput<br>• Identificação de break-even points |
+| `extended_02_performance_breakdown.png` | **Breakdown completo de todas as métricas**<br>• Tempo de execução (single vs multi)<br>• Cache hit rate comparison<br>• Throughput comparison<br>• Tempos médios (espera, retorno, resposta) |
+| `extended_03_cache_policy_comparison.png` | **Comparação de políticas de cache** (FIFO vs LRU)<br>• Placeholder para análise futura<br>• Requer execuções com políticas diferentes |
+| `extended_analysis_report.txt` | **Relatório textual detalhado**<br>• Análise de speedup com percentuais<br>• Degradação de cache por escalonador<br>• Análise de throughput<br>• Recomendações baseadas em dados |
+
+**Exemplo de insights obtidos:**
+```
+Escalonador        Speedup     Melhoria   Single(ms)    Multi(ms)
+----------------------------------------------------------------------
+SJN                  1.23x       22.9%       17.03       13.86  ✅
+Priority             1.13x       13.2%       16.67       14.73  ✅
+RoundRobin           1.06x        6.2%       15.03       14.15  ✅
+FCFS                 0.67x      -33.1%       17.14       25.63  ⚠️
+
+💡 CONCLUSÃO: FCFS perde 33% de desempenho com 8 cores devido a 
+   sincronização, enquanto SJN ganha 23% com paralelismo.
+```
 
 ### Arquivos de Saída
 
@@ -964,7 +1005,8 @@ O simulador gera vários arquivos de saída em `build/output/`:
 |---------|----------|
 | `resultados_*_multicore.dat` | Logs detalhados de execução por escalonador |
 | `comparacao_escalonadores_multicore_*cores.txt` | Tabela comparativa completa |
-| `metrics_multi.csv` | Métricas agregadas para análise |
+| `metrics_single.csv` | Métricas do baseline (1 core, sem threading) |
+| `metrics_multi.csv` | Métricas do multicore (8 cores, com threading) |
 | `metrics_comparison_multicore_*.csv` | Comparação entre escalonadores |
 
 ### Limpeza

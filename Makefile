@@ -69,6 +69,20 @@ plots:
 	@echo "📊 Gerando gráficos..."
 	@cd $(BUILD_DIR) && $(MAKE) plots --no-print-directory
 
+# PLOTS-EXTENDED - Análise estendida com degradação e comparações
+# ============================================================================
+plots-extended:
+	@echo "📊 Gerando análise estendida de desempenho..."
+	@if [ ! -f "$(BUILD_DIR)/output/metrics_single.csv" ] || [ ! -f "$(BUILD_DIR)/output/metrics_multi.csv" ]; then \
+		echo "❌ Arquivos CSV não encontrados."; \
+		echo "   Execute o simulador primeiro:"; \
+		echo "     1. make run  # Digite: 1, n, 5 (single-core)"; \
+		echo "     2. make run  # Digite: 8, y, 5 (multi-core)"; \
+		exit 1; \
+	fi
+	@cd $(BUILD_DIR) && python3 ../scripts/analyze_performance_extended.py output plots
+	@echo "✅ Análise estendida concluída! Veja os gráficos em build/plots/"
+
 # ============================================================================
 # CLEAN - Remove arquivos de build
 # ============================================================================
@@ -116,6 +130,7 @@ help:
 	@echo ""
 	@echo "📊 ANÁLISE:"
 	@echo "  make plots           - Gera gráficos de desempenho"
+	@echo "  make plots-extended  - Análise estendida (degradação, speedup, comparações)"
 	@echo ""
 	@echo "🧹 LIMPEZA:"
 	@echo "  make clean           - Remove diretório build/ completo"
