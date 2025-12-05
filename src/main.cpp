@@ -711,6 +711,9 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
             (metrics.throughput / metrics.context_switches) : metrics.throughput;
     }
     
+    // Para single-core, adicionar utilização de 1 núcleo
+    metrics.per_core_utilization.push_back(metrics.avg_cpu_utilization);
+    
     return metrics;
 }
 
@@ -1443,12 +1446,17 @@ int main(int argc, char* argv[]) {
             std::cout << "▶ Executando " << name << "..." << std::flush;
             
             SchedulerMetrics result;
-            if (num_cores > 1 && config.use_threads) {
-                result = run_multicore_scheduler(num_cores, type, name, true);
-            } else {
-                result = run_scheduler(type, name, true);
-                result.num_cores = num_cores;
+            
+            // Executar dentro de um escopo isolado para garantir destruição completa
+            {
+                if (num_cores > 1 && config.use_threads) {
+                    result = run_multicore_scheduler(num_cores, type, name, true);
+                } else {
+                    result = run_scheduler(type, name, true);
+                    result.num_cores = num_cores;
+                }
             }
+            // Forçar coleta de lixo e dar tempo para destrutores
             
             std::cout << " ✓ (" << std::fixed << std::setprecision(2) 
                       << result.execution_time_ms << " ms)\n";
@@ -1456,16 +1464,23 @@ int main(int argc, char* argv[]) {
             return result;
         };
         
-        all_metrics.push_back(run_func(SchedulerType::FCFS, "FCFS"));
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        
-        all_metrics.push_back(run_func(SchedulerType::SJN, "SJN"));
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        
-        all_metrics.push_back(run_func(SchedulerType::Priority, "Priority"));
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        
-        all_metrics.push_back(run_func(SchedulerType::RoundRobin, "RoundRobin"));
+        // Executar cada escalonador com isolamento completo
+        try {
+            all_metrics.push_back(run_func(SchedulerType::FCFS, "FCFS"));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            
+            all_metrics.push_back(run_func(SchedulerType::SJN, "SJN"));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            
+            all_metrics.push_back(run_func(SchedulerType::Priority, "Priority"));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            
+            all_metrics.push_back(run_func(SchedulerType::RoundRobin, "RoundRobin"));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        } catch (const std::exception& e) {
+            std::cerr << "\n❌ Erro durante execução: " << e.what() << "\n";
+            return 1;
+        }
         
         
         print_comparison_table(all_metrics);

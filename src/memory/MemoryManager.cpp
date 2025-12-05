@@ -9,6 +9,18 @@ MemoryManager::MemoryManager(size_t mainMemorySize, size_t secondaryMemorySize) 
     mainMemoryLimit = mainMemorySize;
 }
 
+MemoryManager::~MemoryManager() {
+    // CRÍTICO: Limpar cache ANTES de destruir as memórias
+    // para evitar write-back em memórias já destruídas
+    if (L1_cache) {
+        L1_cache->invalidate();
+        L1_cache.reset();  // Destruir cache explicitamente
+    }
+    // Agora podemos destruir as memórias com segurança
+    mainMemory.reset();
+    secondaryMemory.reset();
+}
+
 uint32_t MemoryManager::read(uint32_t address, PCB& process) {
     process.mem_accesses_total.fetch_add(1);
     process.mem_reads.fetch_add(1);

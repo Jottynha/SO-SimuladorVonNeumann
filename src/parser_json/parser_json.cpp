@@ -7,9 +7,13 @@
 #include <cctype>
 #include <vector>
 #include <stdexcept>
+#include <mutex>
 
 using namespace std;
 using nlohmann::json;
+
+// Mutex global para proteger mapas estáticos em ambiente multithread
+static std::mutex parser_mutex;
 
 // ======= Tabelas (sem alterações) =======
 const unordered_map<string, int> instructionMap = {
@@ -350,6 +354,9 @@ static json readJsonFile(const string &filename){
 }
 
 int loadJsonProgram(const string &filename, MemoryManager &memManager, PCB& pcb, int startAddr){
+    // Proteger acesso aos mapas estáticos em ambiente multithread
+    std::lock_guard<std::mutex> lock(parser_mutex);
+    
     dataMap.clear();
     labelMap.clear();
 

@@ -13,6 +13,7 @@ const size_t MAIN_MEMORY_SIZE = 1024;
 class MemoryManager {
 public:
     MemoryManager(size_t mainMemorySize, size_t secondaryMemorySize);
+    ~MemoryManager();  // Destrutor para limpar cache antes de destruir memórias
 
     // Métodos unificados agora recebem o PCB para as métricas
     uint32_t read(uint32_t address, PCB& process);
