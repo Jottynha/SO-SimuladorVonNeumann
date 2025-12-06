@@ -6,6 +6,7 @@
 #include "MAIN_MEMORY.hpp"
 #include "SECONDARY_MEMORY.hpp"
 #include "cache.hpp" // Incluir a cache
+#include "cachePolicy.hpp" // Incluir para ReplacementPolicy enum
 #include "../cpu/PCB.hpp" // Incluir o PCB para as métricas
 
 const size_t MAIN_MEMORY_SIZE = 1024;
@@ -30,6 +31,10 @@ public:
     
     // Função auxiliar para o write-back da cache
     void writeToFile(uint32_t address, uint32_t data);
+    
+    // Métodos para configurar e obter política de cache
+    void setCachePolicy(ReplacementPolicy policy);
+    ReplacementPolicy getCachePolicy() const;
 
 private:
     std::unique_ptr<MAIN_MEMORY> mainMemory;

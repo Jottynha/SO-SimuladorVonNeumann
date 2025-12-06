@@ -114,3 +114,13 @@ void MemoryManager::simulateContextSwitchLight() {
     // Quase não polui a cache, apenas marca algumas entradas como menos recentes
     L1_cache->invalidatePartial(0.1f);  // Invalida apenas 10% da cache
 }
+
+void MemoryManager::setCachePolicy(ReplacementPolicy policy) {
+    if (L1_cache) {
+        L1_cache->setPolicy(policy);
+    }
+}
+
+ReplacementPolicy MemoryManager::getCachePolicy() const {
+    return L1_cache ? L1_cache->getPolicy() : ReplacementPolicy::FIFO;
+}

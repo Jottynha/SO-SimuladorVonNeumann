@@ -21,6 +21,8 @@
 #include "memory/MemoryManager.hpp"
 #include "memory/SegmentTable.hpp"
 #include "memory/MemoryUsageTracker.hpp"
+#include "memory/cachePolicy.hpp"
+#include "memory/cache.hpp"
 #include "parser_json/parser_json.hpp"
 #include "IO/IOManager.hpp"
 #include "cpu/Scheduler.hpp"
@@ -492,7 +494,8 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
                                bool save_logs = false,
                                const std::string& config_dir = "processes",
                                const std::string& tasks_dir = "tasks",
-                               const std::string& output_dir = "output") {
+                               const std::string& output_dir = "output",
+                               const std::string& replacement_policy = "FIFO") {
     SchedulerMetrics metrics;
     metrics.name = scheduler_name;
     
@@ -501,6 +504,12 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
     MemoryManager memManager(8192, 16384);
     // Reset cache para garantir execução limpa entre escalonadores
     memManager.resetCache();
+    
+    // Aplicar política de cache configurada
+    ReplacementPolicy policy = (replacement_policy == "LRU") ? 
+                               ReplacementPolicy::LRU : 
+                               ReplacementPolicy::FIFO;
+    memManager.setCachePolicy(policy);
     
     IOManager ioManager;
     Scheduler scheduler(scheduler_type);
@@ -722,7 +731,8 @@ SchedulerMetrics run_multicore_scheduler(int num_cores, SchedulerType scheduler_
                                          const std::string& scheduler_name, bool save_logs = false,
                                          const std::string& config_dir = "processes",
                                          const std::string& tasks_dir = "tasks",
-                                         const std::string& output_dir = "output") {
+                                         const std::string& output_dir = "output",
+                                         const std::string& replacement_policy = "FIFO") {
     SchedulerMetrics metrics;
     metrics.name = scheduler_name;
     metrics.num_cores = num_cores;
@@ -732,6 +742,13 @@ SchedulerMetrics run_multicore_scheduler(int num_cores, SchedulerType scheduler_
     // Gerenciadores compartilhados
     MemoryManager memManager(8192, 16384);
     memManager.resetCache();
+    
+    // Aplicar política de cache configurada
+    ReplacementPolicy policy = (replacement_policy == "LRU") ? 
+                               ReplacementPolicy::LRU : 
+                               ReplacementPolicy::FIFO;
+    memManager.setCachePolicy(policy);
+    
     IOManager ioManager;
     Scheduler scheduler(scheduler_type);
     
@@ -1392,7 +1409,7 @@ int main(int argc, char* argv[]) {
         std::cout << "   Threading:    " << (config.use_threads && num_cores > 1 ? "✓ Habilitado" : "✗ Desabilitado") << "\n";
         std::cout << "   Escalonador:  " << config.scheduler << "\n";
         std::cout << "   Quantum:      " << config.quantum << " ciclos\n";
-        std::cout << "   Substituição: " << config.replacement_policy << "\n";
+        std::cout << "   Cache Policy: " << config.replacement_policy << " (" << CACHE_CAPACITY << " blocos)\n";
         std::cout << "   Config Dir:   " << config.config_dir << "\n";
         std::cout << "   Tasks Dir:    " << config.tasks_dir << "\n";
         std::cout << "   Output Dir:   " << config.output_dir << "\n\n";
@@ -1409,11 +1426,13 @@ int main(int argc, char* argv[]) {
         // Decidir entre multi-thread ou sequencial
         if (num_cores > 1 && config.use_threads) {
             metrics = run_multicore_scheduler(num_cores, scheduler_type, config.scheduler, true,
-                                             config.config_dir, config.tasks_dir, config.output_dir);
+                                             config.config_dir, config.tasks_dir, config.output_dir,
+                                             config.replacement_policy);
         } else {
             // Execução sequencial (mesmo com múltiplos cores logicamente)
             metrics = run_scheduler(scheduler_type, config.scheduler, true,
-                                   config.config_dir, config.tasks_dir, config.output_dir);
+                                   config.config_dir, config.tasks_dir, config.output_dir,
+                                   config.replacement_policy);
             metrics.num_cores = num_cores; // Registrar número de cores configurados
         }
         
@@ -1424,9 +1443,20 @@ int main(int argc, char* argv[]) {
         std::cout << "Cache hit rate: " << std::fixed << std::setprecision(2) 
                   << metrics.cache_hit_rate << "%\n\n";
         
+        // Salvar CSV também
+        std::string csv_name;
+        if (num_cores == 1 || !config.use_threads) {
+            csv_name = config.output_dir + "/metrics_single.csv";
+        } else {
+            csv_name = config.output_dir + "/metrics_multi.csv";
+        }
+        std::vector<SchedulerMetrics> metrics_vec = {metrics};
+        save_metrics_csv(metrics_vec, csv_name);
+        std::cout << "Métricas CSV: " << csv_name << "\n";
+        
         std::string mode_suffix = (num_cores > 1 && config.use_threads) ? "_multicore" : "";
         std::string output_file = config.output_dir + "/resultados_" + config.scheduler + mode_suffix + ".dat";
-        std::cout << "Resultados salvos em: " << output_file << "\n";
+        std::cout << "Resultados detalhados: " << output_file << "\n";
         
         return 0;
     }
@@ -1451,9 +1481,13 @@ int main(int argc, char* argv[]) {
             // Executar dentro de um escopo isolado para garantir destruição completa
             {
                 if (num_cores > 1 && config.use_threads) {
-                    result = run_multicore_scheduler(num_cores, type, name, true);
+                    result = run_multicore_scheduler(num_cores, type, name, true,
+                                                    "processes", "tasks", "output",
+                                                    config.replacement_policy);
                 } else {
-                    result = run_scheduler(type, name, true);
+                    result = run_scheduler(type, name, true,
+                                         "processes", "tasks", "output",
+                                         config.replacement_policy);
                     result.num_cores = num_cores;
                 }
             }
@@ -1578,10 +1612,14 @@ int main(int argc, char* argv[]) {
     SchedulerMetrics metrics;
     // Decidir entre multi-thread ou sequencial
     if (num_cores > 1 && config.use_threads) {
-        metrics = run_multicore_scheduler(num_cores, scheduler_type, scheduler_name, true);
+        metrics = run_multicore_scheduler(num_cores, scheduler_type, scheduler_name, true,
+                                        "processes", "tasks", "output",
+                                        config.replacement_policy);
     } else {
         // Execução sequencial (mesmo com múltiplos cores logicamente)
-        metrics = run_scheduler(scheduler_type, scheduler_name, true);
+        metrics = run_scheduler(scheduler_type, scheduler_name, true,
+                              "processes", "tasks", "output",
+                              config.replacement_policy);
         metrics.num_cores = num_cores; // Registrar número de cores configurados
     }
     

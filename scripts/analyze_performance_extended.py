@@ -336,30 +336,195 @@ class ExtendedAnalyzer:
     def plot_cache_policy_comparison(self):
         """
         Análise 3: Comparação de políticas de cache (FIFO vs LRU)
-        NOTA: Esta análise requer que o simulador seja executado com diferentes políticas
-        e salve os resultados em arquivos separados (metrics_fifo.csv, metrics_lru.csv)
+        Detecta automaticamente se há dados de diferentes políticas
         """
-        # TODO: Implementar quando houver suporte para múltiplas políticas
-        # Por enquanto, vamos criar um placeholder
+        # Tentar detectar dados de diferentes políticas de cache
+        parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        output_base = os.path.join(parent_dir, 'output')
         
-        fig, ax = plt.subplots(figsize=(12, 8))
-        ax.text(0.5, 0.5, 
-               'ANÁLISE DE POLÍTICAS DE CACHE\n\n' + 
-               'Esta análise compara FIFO vs LRU\n\n' +
-               'Para gerar esta análise:\n' +
-               '1. Execute o simulador com política FIFO\n' +
-               '2. Execute o simulador com política LRU\n' +
-               '3. Salve os resultados em arquivos separados\n\n' +
-               'Métricas comparadas:\n' +
-               '• Cache Hit Rate\n' +
-               '• Tempo de Execução\n' +
-               '• Eficiência por tipo de processo\n' +
-               '  (CPU-bound, IO-bound, Memory-intensive)',
-               ha='center', va='center', fontsize=14,
-               bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-        ax.axis('off')
+        # Procurar por diretórios com fifo/lru
+        fifo_dirs = []
+        lru_dirs = []
         
-        plt.tight_layout()
+        if os.path.exists(output_base):
+            for item in os.listdir(output_base):
+                item_path = os.path.join(output_base, item)
+                if os.path.isdir(item_path):
+                    if 'fifo' in item.lower():
+                        fifo_dirs.append(item_path)
+                    elif 'lru' in item.lower():
+                        lru_dirs.append(item_path)
+        
+        # Se não encontrou dados, mostrar placeholder
+        if not fifo_dirs or not lru_dirs:
+            fig, ax = plt.subplots(figsize=(12, 8))
+            ax.text(0.5, 0.5, 
+                   'COMPARAÇÃO DE POLÍTICAS DE CACHE\n\n' + 
+                   'Nenhum dado encontrado para comparação FIFO vs LRU\n\n' +
+                   'Execute o script de teste:\n' +
+                   '  $ scripts/test_cache_policies.sh\n\n' +
+                   'Ou execute manualmente:\n' +
+                   '  $ ./simulador --replacement FIFO --output output/fifo_test\n' +
+                   '  $ ./simulador --replacement LRU --output output/lru_test',
+                   ha='center', va='center', fontsize=14,
+                   bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+            ax.axis('off')
+            plt.tight_layout()
+            plt.savefig(f'{self.output_dir}/extended_03_cache_policy_comparison.png',
+                       dpi=300, bbox_inches='tight')
+            plt.close()
+            return
+        
+        # Carregar dados FIFO e LRU
+        fifo_data = {}
+        lru_data = {}
+        
+        # Priorizar dados de 1 core e 8 cores
+        for fdir in fifo_dirs:
+            for csv_name in ['metrics_single.csv', 'metrics_multi.csv']:
+                csv_path = os.path.join(fdir, csv_name)
+                if os.path.exists(csv_path):
+                    data = self.load_csv(csv_path)
+                    core_type = '1core' if 'single' in csv_name else '8cores'
+                    if fdir not in fifo_data:
+                        fifo_data[fdir] = {}
+                    fifo_data[fdir][core_type] = data
+        
+        for ldir in lru_dirs:
+            for csv_name in ['metrics_single.csv', 'metrics_multi.csv']:
+                csv_path = os.path.join(ldir, csv_name)
+                if os.path.exists(csv_path):
+                    data = self.load_csv(csv_path)
+                    core_type = '1core' if 'single' in csv_name else '8cores'
+                    if ldir not in lru_data:
+                        lru_data[ldir] = {}
+                    lru_data[ldir][core_type] = data
+        
+        if not fifo_data or not lru_data:
+            return
+        
+        # Criar gráfico comparativo
+        fig = plt.figure(figsize=(18, 10))
+        fig.suptitle('Comparação FIFO vs LRU: Políticas de Substituição de Cache',
+                    fontsize=16, fontweight='bold', y=0.98)
+        
+        gs = fig.add_gridspec(2, 3, hspace=0.3, wspace=0.3)
+        
+        # Pegar primeiro diretório de cada
+        fifo_dir = list(fifo_data.keys())[0]
+        lru_dir = list(lru_data.keys())[0]
+        
+        fifo_name = os.path.basename(fifo_dir)
+        lru_name = os.path.basename(lru_dir)
+        
+        # 1. Cache Hit Rate Comparison
+        ax1 = fig.add_subplot(gs[0, 0])
+        for core_type in ['1core', '8cores']:
+            if core_type in fifo_data[fifo_dir] and core_type in lru_data[lru_dir]:
+                schedulers = list(fifo_data[fifo_dir][core_type].keys())
+                x = np.arange(len(schedulers))
+                width = 0.35
+                
+                fifo_hits = [fifo_data[fifo_dir][core_type][s]['cache_hit_rate'] for s in schedulers]
+                lru_hits = [lru_data[lru_dir][core_type][s]['cache_hit_rate'] for s in schedulers]
+                
+                offset = -width/2 if core_type == '1core' else width/2
+                label_suffix = ' (1 core)' if core_type == '1core' else ' (8 cores)'
+                
+                ax1.bar(x + offset - width/2, fifo_hits, width/2, label=f'FIFO{label_suffix}', 
+                       alpha=0.8, color='#FF6B6B')
+                ax1.bar(x + offset, lru_hits, width/2, label=f'LRU{label_suffix}',
+                       alpha=0.8, color='#4ECDC4')
+        
+        ax1.set_xlabel('Escalonador')
+        ax1.set_ylabel('Cache Hit Rate (%)')
+        ax1.set_title('Taxa de Acerto na Cache')
+        ax1.set_xticks(x)
+        ax1.set_xticklabels(schedulers, rotation=45, ha='right')
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
+        
+        # 2. Execution Time Comparison
+        ax2 = fig.add_subplot(gs[0, 1])
+        for core_type in ['1core', '8cores']:
+            if core_type in fifo_data[fifo_dir] and core_type in lru_data[lru_dir]:
+                schedulers = list(fifo_data[fifo_dir][core_type].keys())
+                x = np.arange(len(schedulers))
+                width = 0.35
+                
+                fifo_times = [fifo_data[fifo_dir][core_type][s]['exec_time'] for s in schedulers]
+                lru_times = [lru_data[lru_dir][core_type][s]['exec_time'] for s in schedulers]
+                
+                offset = -width/2 if core_type == '1core' else width/2
+                label_suffix = ' (1 core)' if core_type == '1core' else ' (8 cores)'
+                
+                ax2.bar(x + offset - width/2, fifo_times, width/2, label=f'FIFO{label_suffix}',
+                       alpha=0.8, color='#FF6B6B')
+                ax2.bar(x + offset, lru_times, width/2, label=f'LRU{label_suffix}',
+                       alpha=0.8, color='#4ECDC4')
+        
+        ax2.set_xlabel('Escalonador')
+        ax2.set_ylabel('Tempo de Execução (ms)')
+        ax2.set_title('Tempo de Execução')
+        ax2.set_xticks(x)
+        ax2.set_xticklabels(schedulers, rotation=45, ha='right')
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
+        
+        # 3. Improvement Percentage
+        ax3 = fig.add_subplot(gs[0, 2])
+        improvements = []
+        labels = []
+        
+        for core_type in ['1core', '8cores']:
+            if core_type in fifo_data[fifo_dir] and core_type in lru_data[lru_dir]:
+                schedulers = list(fifo_data[fifo_dir][core_type].keys())
+                for s in schedulers:
+                    fifo_hit = fifo_data[fifo_dir][core_type][s]['cache_hit_rate']
+                    lru_hit = lru_data[lru_dir][core_type][s]['cache_hit_rate']
+                    improvement = lru_hit - fifo_hit
+                    improvements.append(improvement)
+                    label = f"{s}\n({'1c' if core_type == '1core' else '8c'})"
+                    labels.append(label)
+        
+        colors = ['#4ECDC4' if imp > 0 else '#FF6B6B' for imp in improvements]
+        x = np.arange(len(improvements))
+        ax3.bar(x, improvements, color=colors, alpha=0.8)
+        ax3.axhline(y=0, color='black', linestyle='-', linewidth=0.8)
+        ax3.set_xlabel('Escalonador')
+        ax3.set_ylabel('Melhoria na Taxa de Hit (%)')
+        ax3.set_title('LRU vs FIFO: Ganho/Perda')
+        ax3.set_xticks(x)
+        ax3.set_xticklabels(labels, rotation=45, ha='right', fontsize=8)
+        ax3.grid(True, alpha=0.3, axis='y')
+        
+        # 4. Throughput Comparison
+        ax4 = fig.add_subplot(gs[1, :])
+        for core_type in ['1core', '8cores']:
+            if core_type in fifo_data[fifo_dir] and core_type in lru_data[lru_dir]:
+                schedulers = list(fifo_data[fifo_dir][core_type].keys())
+                x = np.arange(len(schedulers))
+                width = 0.2
+                
+                fifo_tput = [fifo_data[fifo_dir][core_type][s]['throughput'] for s in schedulers]
+                lru_tput = [lru_data[lru_dir][core_type][s]['throughput'] for s in schedulers]
+                
+                offset = -width if core_type == '1core' else width
+                label_suffix = ' (1 core)' if core_type == '1core' else ' (8 cores)'
+                
+                ax4.bar(x + offset - width/2, fifo_tput, width, label=f'FIFO{label_suffix}',
+                       alpha=0.8, color='#FF6B6B')
+                ax4.bar(x + offset + width/2, lru_tput, width, label=f'LRU{label_suffix}',
+                       alpha=0.8, color='#4ECDC4')
+        
+        ax4.set_xlabel('Escalonador')
+        ax4.set_ylabel('Throughput (processos/segundo)')
+        ax4.set_title('Throughput: FIFO vs LRU')
+        ax4.set_xticks(x)
+        ax4.set_xticklabels(schedulers, rotation=45, ha='right')
+        ax4.legend(loc='upper left', ncol=4)
+        ax4.grid(True, alpha=0.3)
+        
         plt.savefig(f'{self.output_dir}/extended_03_cache_policy_comparison.png',
                    dpi=300, bbox_inches='tight')
         plt.close()
