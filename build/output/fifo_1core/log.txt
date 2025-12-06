@@ -1,0 +1,39 @@
+=== SIMULADOR DE ARQUITETURA MULTICORE VON NEUMANN ===
+
+ Configuração:
+   Cores:        1
+   Threading:    ✗ Desabilitado
+   Escalonador:  FCFS
+   Quantum:      5 ciclos
+   Cache Policy: FIFO (64 blocos)
+   Config Dir:   processes
+   Tasks Dir:    tasks
+   Output Dir:   /home/joao/Projetos/SO-SimuladorVonNeumann/build/output/fifo_1core
+
+Executando FCFS...
+
+
+[LOAD_PROCESSES] Iniciando carregamento de processos...
+   Config Dir: processes
+   Tasks Dir:  tasks
+
+   [1/9] Carregando Quick Process...  PID: 1
+   [2/9] Carregando Short Process...  PID: 2
+   [3/9] Carregando Medium Process...  PID: 3
+   [4/9] Carregando Long Process...  PID: 4
+   [5/9] Carregando CPU-Bound Process...  PID: 5
+   [6/9] Carregando IO-Bound Process...  PID: 6
+   [7/9] Carregando Memory-Intensive Process...  PID: 7
+   [8/9] Carregando Balanced Process...  PID: 8
+   [9/9] Carregando Loop-Heavy Process...  PID: 9
+
+   📦 Total: 9/9 processos carregados com sucesso!
+
+Execução concluída!
+Tempo: 29.235 ms
+Processos finalizados: 9
+Context switches: 0
+Cache hit rate: 19.93%
+
+Métricas CSV: /home/joao/Projetos/SO-SimuladorVonNeumann/build/output/fifo_1core/metrics_single.csv
+Resultados detalhados: /home/joao/Projetos/SO-SimuladorVonNeumann/build/output/fifo_1core/resultados_FCFS.dat

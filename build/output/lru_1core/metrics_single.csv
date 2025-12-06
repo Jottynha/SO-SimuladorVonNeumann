@@ -1,0 +1,3 @@
+# NOTA: Métricas de execuções únicas por escalonador (opção 5) ou médias de múltiplas execuções (opções 1-4)
+Scheduler,ExecTime_ms,Throughput,Processes,ContextSwitches,AvgWaitTime_ms,AvgTurnaroundTime_ms,AvgResponseTime_ms,CPUUtilization,CacheHitRate,Efficiency,Cores,Threading
+FCFS,25.878,347.79,9,0,2.56,3.44,2.56,19.21,21.13,347.786,1,False

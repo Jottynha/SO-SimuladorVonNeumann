@@ -1,0 +1,100 @@
+======================================================================================================================================================
+                    RELATÓRIO COMPARATIVO DETALHADO DE ESCALONADORES (MULTICORE - 8 cores)
+                    Data: 05/12/2025 19:26:56
+                    NOTA: Métricas de execuções únicas (opção 5 do menu)
+======================================================================================================================================================
+
+=== DESEMPENHO GERAL ===
+
+Escalonador        Tempo Exec(ms)     Throughput      Processos     Ctx Switch        Ciclos CPU
+----------------------------------------------------------------------------------------------------
+FCFS                       25.632         351.12              9              0               214
+SJN                        13.855         649.58              9              0               214
+Priority                   14.727         611.12              9              0               214
+RoundRobin                 14.151         636.00              9              0               214
+
+
+=== MÉTRICAS DE ESCALONAMENTO ===
+
+Escalonador         Tempo Esp(ms)     Tempo Ret(ms)    Tempo Resp(ms)       Util CPU(%)    Eficiência
+---------------------------------------------------------------------------------------------------------
+FCFS                         1.11              3.11              1.11              19.2        351.124
+SJN                          0.44              1.89              0.44              19.2        649.585
+Priority                     2.56              3.89              2.56              19.2        611.122
+RoundRobin                   0.67              1.56              0.67              19.2        635.997
+
+
+=== MÉTRICAS DE MEMÓRIA ===
+
+Escalonador         Acessos Total       Leituras       Escritas        Cache Hits      Cache Misses
+----------------------------------------------------------------------------------------------------
+FCFS                          288            270             18                53               235
+SJN                           284            266             18                58               226
+Priority                      288            270             18                56               232
+RoundRobin                    288            270             18                54               234
+
+
+=== EFICIÊNCIA DE CACHE E MEMÓRIA ===
+
+Escalonador         Taxa Cache(%)   Ciclos Mem/Acesso     Mem Principal   Mem Secundária
+----------------------------------------------------------------------------------------------------
+FCFS                        18.40               5.892               125               101
+SJN                         20.42               5.891               120               101
+Priority                    19.44               5.851               122               101
+RoundRobin                  18.75               5.878               124               101
+
+
+=== ANÁLISE COMPARATIVA ===
+
+Mais Rápido:           SJN (13.855 ms)
+ Melhor Taxa Cache:     SJN (20.423%)
+ Maior Throughput:       SJN (649.585 proc/s)
+ Menos Ctx Switches:    FCFS (0 switches)
+  Melhor Tempo Resposta: SJN (0.444 ms)
+ Melhor Tempo Espera:   SJN (0.444 ms)
+
+
+=== UTILIZAÇÃO POR NÚCLEO ===
+
+FCFS:
+  Core 0: 4.76%
+  Core 1: 0.50%
+  Core 2: 100.00%
+  Core 3: 0.00%
+  Core 4: 0.00%
+  Core 5: 0.00%
+  Core 6: 0.00%
+  Core 7: 0.00%
+
+SJN:
+  Core 0: 1.10%
+  Core 1: 2.91%
+  Core 2: 0.52%
+  Core 3: 0.58%
+  Core 4: 0.62%
+  Core 5: 100.00%
+  Core 6: 0.00%
+  Core 7: 0.00%
+
+Priority:
+  Core 0: 1.96%
+  Core 1: 4.76%
+  Core 2: 100.00%
+  Core 3: 1.64%
+  Core 4: 1.96%
+  Core 5: 3.23%
+  Core 6: 2.44%
+  Core 7: 0.00%
+
+RoundRobin:
+  Core 0: 1.41%
+  Core 1: 1.64%
+  Core 2: 9.09%
+  Core 3: 1.23%
+  Core 4: 1.23%
+  Core 5: 1.64%
+  Core 6: 100.00%
+  Core 7: 0.00%
+
+
+======================================================================================================================================================
