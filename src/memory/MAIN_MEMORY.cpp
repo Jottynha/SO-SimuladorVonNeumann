@@ -1,4 +1,5 @@
 #include "MAIN_MEMORY.hpp"
+#include <iostream>
 
 MAIN_MEMORY::MAIN_MEMORY(size_t size)
 {

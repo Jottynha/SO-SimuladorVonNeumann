@@ -132,12 +132,14 @@ void Control_Unit::Fetch(ControlContext &context) {
     const uint32_t END_SENTINEL = 0b11111100000000000000000000000000u;
     if (instr == END_SENTINEL) {
         context.endProgram = true;
-        return;
+        context.endExecution = true;
+        context.counterForEnd = 0;  // Força pipeline a parar imediatamente
+        context.process.state = State::Finished;
+        return;  // Não incrementa PC após END
     }
     // PC <- PC + 4 (endereçamento por byte)
     context.registers.pc.write(context.registers.pc.value + 4);
 }
-
 void Control_Unit::Decode(ControlContext &context, Instruction_Data &data) {
     uint32_t instruction = context.registers.ir.read();
     data.rawInstruction = instruction;
@@ -168,7 +170,7 @@ void Control_Unit::Decode(ControlContext &context, Instruction_Data &data) {
     } else if (data.op == "PRINT") {
         data.target_register = Get_target_Register(instruction);
         std::string imm = Get_immediate(instruction);
-        bool allZero = true;
+        bool allZero = true;    
         for (char c : imm) if (c != '0') { allZero = false; break; }
         if (!allZero) {
             data.addressRAMResult = imm;
@@ -447,7 +449,7 @@ void* Core(MemoryManager &memoryManager, PCB &process, vector<unique_ptr<IOReque
             account_stage(process);
             UC.Decode(context, UC.data[context.counter - 1]);
         }
-        if (context.counter >= 0 && context.counterForEnd == 5) {
+        if (context.counter >= 0 && context.counterForEnd == 5 && !context.endProgram) {
             UC.data.push_back(data);
             UC.Fetch(context);
         }

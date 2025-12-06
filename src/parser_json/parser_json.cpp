@@ -7,9 +7,13 @@
 #include <cctype>
 #include <vector>
 #include <stdexcept>
+#include <mutex>
 
 using namespace std;
 using nlohmann::json;
+
+// Mutex global para proteger mapas estáticos em ambiente multithread
+static std::mutex parser_mutex;
 
 // ======= Tabelas (sem alterações) =======
 const unordered_map<string, int> instructionMap = {
@@ -206,8 +210,21 @@ uint32_t encodeJType(const json &j){
 
 uint32_t parseInstruction(const json &instrJson, int currentInstrIndex){
     const string mnem = instrJson.at("instruction").get<string>();
-    if (mnem=="end" || mnem=="print")
+    
+    // END: sem operandos
+    if (mnem=="end")
         return static_cast<uint32_t>(getOpcode(mnem)) << 26;
+    
+    // PRINT: pode ter rt (registrador) ou nada (depende do contexto)
+    if (mnem=="print") {
+        int opcode = getOpcode(mnem);
+        int rt = 0;
+        if (instrJson.contains("rt")) {
+            rt = getRegisterCode(instrJson.at("rt").get<string>());
+        }
+        // PRINT codificado como I-type: opcode | 00000 | rt | 0x0000
+        return buildBinaryInstruction(opcode, 0, rt, 0, 0, 0, 0, 0);
+    }
 
     if (functMap.count(mnem))              return encodeRType(instrJson);
     if (mnem=="j" || mnem=="jal")          return encodeJType(instrJson);
@@ -262,13 +279,13 @@ int parseData(const json &dataJson, MemoryManager &memManager, PCB& pcb, int sta
                     for (auto &v : item["value"]){
                         int w = v.is_string()? static_cast<int>(std::stoul(v.get<string>(),nullptr,0))
                                              : v.get<int>();
-                        memManager.write(addr, w, pcb); // Alterado aqui
+                        memManager.writeToFile(addr, w);
                         addr += 4;
                     }
                 } else {
                     int w = item["value"].is_string()? static_cast<int>(std::stoul(item["value"].get<string>(),nullptr,0))
                                                       : item["value"].get<int>();
-                    memManager.write(addr, w, pcb); // Alterado aqui
+                    memManager.writeToFile(addr, w);
                     addr += 4;
                 }
             } else if (type=="byte"){
@@ -314,11 +331,17 @@ int parseProgram(const json &programJson, MemoryManager &memManager, PCB& pcb, i
         
         uint32_t binary_instruction = parseInstruction(node, current_instruction_addr);
         
-        memManager.write(current_mem_addr, binary_instruction, pcb); // Alterado aqui
+        // Escrever diretamente na memória principal (não apenas cache)
+        memManager.writeToFile(current_mem_addr, binary_instruction);
         
         current_mem_addr += 4;
         current_instruction_addr++;
     }
+
+    // ADICIONA INSTRUÇÃO END AUTOMATICAMENTE AO FINAL
+    uint32_t end_instruction = 0xFC000000; // Opcode END = 111111 (6 bits mais significativos)
+    memManager.writeToFile(current_mem_addr, end_instruction);
+    current_mem_addr += 4;
 
     return current_mem_addr;
 }
@@ -331,6 +354,9 @@ static json readJsonFile(const string &filename){
 }
 
 int loadJsonProgram(const string &filename, MemoryManager &memManager, PCB& pcb, int startAddr){
+    // Proteger acesso aos mapas estáticos em ambiente multithread
+    std::lock_guard<std::mutex> lock(parser_mutex);
+    
     dataMap.clear();
     labelMap.clear();
 

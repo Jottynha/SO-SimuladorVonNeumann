@@ -21,6 +21,8 @@
 #include "memory/MemoryManager.hpp"
 #include "memory/SegmentTable.hpp"
 #include "memory/MemoryUsageTracker.hpp"
+#include "memory/cachePolicy.hpp"
+#include "memory/cache.hpp"
 #include "parser_json/parser_json.hpp"
 #include "IO/IOManager.hpp"
 #include "cpu/Scheduler.hpp"
@@ -302,6 +304,19 @@ void print_metrics(const PCB& pcb, std::ofstream& outFile) {
     outFile << "  Misses: " << cache_misses << "\n";
     outFile << "  Taxa:   " << std::fixed << std::setprecision(2) << hit_rate << "%\n";
     
+    outFile << "\n[REGISTRADORES FINAIS]\n";
+    outFile << pcb.regBank.get_registers_as_string();
+
+    outFile << "\n[INSTRUÇÕES EXECUTADAS]\n";
+    if (pcb.execution_log.empty()) {
+        outFile << "  Nenhuma instrução registrada.\n";
+    } else {
+        size_t idx = 1;
+        for (const auto& entry : pcb.execution_log) {
+            outFile << "  #" << std::setw(4) << idx++ << " " << entry << "\n";
+        }
+    }
+
     outFile << "\n" << std::string(60, '-') << "\n";
 }
 
@@ -322,6 +337,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     std::cout << "   [1/9] Carregando Quick Process... ";
     auto p1 = std::make_unique<PCB>();
     if (load_pcb_from_json(config_dir + "/process_quick.json", *p1)) {
+        p1->execution_log.clear(); // Limpar log antes de carregar
+        p1->base_address = 0;  // Endereço base do processo
+        p1->regBank.reset();  // Reset dos registradores
+        p1->regBank.pc.write(p1->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_quick.json", memManager, *p1, 0);
         process_list.push_back(std::move(p1));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -334,6 +353,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     std::cout << "   [2/9] Carregando Short Process... ";
     auto p2 = std::make_unique<PCB>();
     if (load_pcb_from_json(config_dir + "/process_short.json", *p2)) {
+        p2->execution_log.clear(); // Limpar log antes de carregar
+        p2->base_address = 1024;  // Endereço base do processo
+        p2->regBank.reset();  // Reset dos registradores
+        p2->regBank.pc.write(p2->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_short.json", memManager, *p2, 1024);
         process_list.push_back(std::move(p2));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -346,6 +369,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     std::cout << "   [3/9] Carregando Medium Process... ";
     auto p3 = std::make_unique<PCB>();
     if (load_pcb_from_json(config_dir + "/process_medium.json", *p3)) {
+        p3->execution_log.clear(); // Limpar log antes de carregar
+        p3->base_address = 2048;  // Endereço base do processo
+        p3->regBank.reset();  // Reset dos registradores
+        p3->regBank.pc.write(p3->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_medium.json", memManager, *p3, 2048);
         process_list.push_back(std::move(p3));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -358,6 +385,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     std::cout << "   [4/9] Carregando Long Process... ";
     auto p4 = std::make_unique<PCB>();
     if (load_pcb_from_json(config_dir + "/process_long.json", *p4)) {
+        p4->execution_log.clear(); // Limpar log antes de carregar
+        p4->base_address = 3072;  // Endereço base do processo
+        p4->regBank.reset();  // Reset dos registradores
+        p4->regBank.pc.write(p4->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_long.json", memManager, *p4, 3072);
         process_list.push_back(std::move(p4));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -370,6 +401,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     std::cout << "   [5/9] Carregando CPU-Bound Process... ";
     auto p5 = std::make_unique<PCB>();
     if (load_pcb_from_json(config_dir + "/process_cpu_bound.json", *p5)) {
+        p5->execution_log.clear(); // Limpar log antes de carregar
+        p5->base_address = 4096;  // Endereço base do processo
+        p5->regBank.reset();  // Reset dos registradores
+        p5->regBank.pc.write(p5->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_cpu_bound.json", memManager, *p5, 4096);
         process_list.push_back(std::move(p5));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -382,6 +417,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     std::cout << "   [6/9] Carregando IO-Bound Process... ";
     auto p6 = std::make_unique<PCB>();
     if (load_pcb_from_json(config_dir + "/process_io_bound.json", *p6)) {
+        p6->execution_log.clear(); // Limpar log antes de carregar
+        p6->base_address = 5120;  // Endereço base do processo
+        p6->regBank.reset();  // Reset dos registradores
+        p6->regBank.pc.write(p6->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_io_bound.json", memManager, *p6, 5120);
         process_list.push_back(std::move(p6));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -394,6 +433,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     std::cout << "   [7/9] Carregando Memory-Intensive Process... ";
     auto p7 = std::make_unique<PCB>();
     if (load_pcb_from_json(config_dir + "/process_memory_intensive.json", *p7)) {
+        p7->execution_log.clear(); // Limpar log antes de carregar
+        p7->base_address = 6144;  // Endereço base do processo
+        p7->regBank.reset();  // Reset dos registradores
+        p7->regBank.pc.write(p7->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_memory_intensive.json", memManager, *p7, 6144);
         process_list.push_back(std::move(p7));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -406,6 +449,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     std::cout << "   [8/9] Carregando Balanced Process... ";
     auto p8 = std::make_unique<PCB>();
     if (load_pcb_from_json(config_dir + "/process_balanced.json", *p8)) {
+        p8->execution_log.clear(); // Limpar log antes de carregar
+        p8->base_address = 7168;  // Endereço base do processo
+        p8->regBank.reset();  // Reset dos registradores
+        p8->regBank.pc.write(p8->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_balanced.json", memManager, *p8, 7168);
         process_list.push_back(std::move(p8));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -419,6 +466,10 @@ std::vector<std::unique_ptr<PCB>> load_processes(MemoryManager& memManager,
     auto p9 = std::make_unique<PCB>();
     bool loaded = load_pcb_from_json(config_dir + "/process_loop_heavy.json", *p9);
     if (loaded) {
+        p9->execution_log.clear(); // Limpar log antes de carregar
+        p9->base_address = 8192;  // Endereço base do processo
+        p9->regBank.reset();  // Reset dos registradores
+        p9->regBank.pc.write(p9->base_address);  // PC inicia no base_address
         loadJsonProgram(tasks_dir + "/tasks_loop_heavy.json", memManager, *p9, 8192);
         process_list.push_back(std::move(p9));
         std::cout << " PID: " << process_list.back()->pid << "\n";
@@ -443,7 +494,8 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
                                bool save_logs = false,
                                const std::string& config_dir = "processes",
                                const std::string& tasks_dir = "tasks",
-                               const std::string& output_dir = "output") {
+                               const std::string& output_dir = "output",
+                               const std::string& replacement_policy = "FIFO") {
     SchedulerMetrics metrics;
     metrics.name = scheduler_name;
     
@@ -452,6 +504,12 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
     MemoryManager memManager(8192, 16384);
     // Reset cache para garantir execução limpa entre escalonadores
     memManager.resetCache();
+    
+    // Aplicar política de cache configurada
+    ReplacementPolicy policy = (replacement_policy == "LRU") ? 
+                               ReplacementPolicy::LRU : 
+                               ReplacementPolicy::FIFO;
+    memManager.setCachePolicy(policy);
     
     IOManager ioManager;
     Scheduler scheduler(scheduler_type);
@@ -474,6 +532,9 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
 
     int max_iterations = 10000;
     int iteration_count = 0;
+    
+    // Debug: contadores por processo
+    std::map<int, int> process_exec_count;
     
     while (finished_processes < total_processes && iteration_count < max_iterations) {
         iteration_count++;
@@ -502,6 +563,9 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
             current_process->start_time = std::chrono::high_resolution_clock::now();
             current_process->first_run = false;
             
+            // Inicializar PC com o endereço base do processo
+            current_process->regBank.pc.write(current_process->base_address);
+            
             // **IMPORTANTE**: Simular cache cold start para processos novos
             // Cada processo novo "polui" a cache parcialmente ao carregar suas instruções/dados
             memManager.simulateContextSwitchLight();  // Invalidação leve (10%)
@@ -510,11 +574,14 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
         current_process->state = State::Running;
 
         std::vector<std::unique_ptr<IORequest>> io_requests;
-        bool print_lock = true;
+        bool print_lock = false;  // Desabilitado para evitar bloqueio em PRINT
 
         int before_instr = current_process->instruction_count;
         size_t before_log = current_process->execution_log.size();
 
+        // Debug: incrementar contador
+        process_exec_count[current_process->pid]++;
+        
         Core(memManager, *current_process, &io_requests, print_lock);
 
         if (current_process->state == State::Blocked) {
@@ -562,6 +629,9 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
         } else {
             bool progressed = (current_process->instruction_count > before_instr) || 
                             (current_process->execution_log.size() > before_log);
+            
+            // Remover logging de debug excessivo
+            
             if (progressed) {
                 current_process->stagnation_counter = 0;
             } else {
@@ -650,6 +720,9 @@ SchedulerMetrics run_scheduler(SchedulerType scheduler_type, const std::string& 
             (metrics.throughput / metrics.context_switches) : metrics.throughput;
     }
     
+    // Para single-core, adicionar utilização de 1 núcleo
+    metrics.per_core_utilization.push_back(metrics.avg_cpu_utilization);
+    
     return metrics;
 }
 
@@ -658,7 +731,8 @@ SchedulerMetrics run_multicore_scheduler(int num_cores, SchedulerType scheduler_
                                          const std::string& scheduler_name, bool save_logs = false,
                                          const std::string& config_dir = "processes",
                                          const std::string& tasks_dir = "tasks",
-                                         const std::string& output_dir = "output") {
+                                         const std::string& output_dir = "output",
+                                         const std::string& replacement_policy = "FIFO") {
     SchedulerMetrics metrics;
     metrics.name = scheduler_name;
     metrics.num_cores = num_cores;
@@ -668,6 +742,13 @@ SchedulerMetrics run_multicore_scheduler(int num_cores, SchedulerType scheduler_
     // Gerenciadores compartilhados
     MemoryManager memManager(8192, 16384);
     memManager.resetCache();
+    
+    // Aplicar política de cache configurada
+    ReplacementPolicy policy = (replacement_policy == "LRU") ? 
+                               ReplacementPolicy::LRU : 
+                               ReplacementPolicy::FIFO;
+    memManager.setCachePolicy(policy);
+    
     IOManager ioManager;
     Scheduler scheduler(scheduler_type);
     
@@ -684,6 +765,7 @@ SchedulerMetrics run_multicore_scheduler(int num_cores, SchedulerType scheduler_
     std::mutex blocked_mutex;
     std::mutex scheduler_mutex;
     std::mutex metrics_mutex;
+    std::mutex memory_mutex;  // Proteger acesso ao MemoryManager
     
     create_output_directory();
     std::ofstream results_file;
@@ -746,7 +828,7 @@ SchedulerMetrics run_multicore_scheduler(int num_cores, SchedulerType scheduler_
             core_metrics[core_id].busy_cycles.fetch_add(1);
             
             std::vector<std::unique_ptr<IORequest>> io_requests;
-            bool print_lock = true;
+            bool print_lock = false;  // Desabilitado para evitar bloqueio em PRINT
             
             int before_instr = current_process->instruction_count;
             size_t before_log = current_process->execution_log.size();
@@ -1327,7 +1409,7 @@ int main(int argc, char* argv[]) {
         std::cout << "   Threading:    " << (config.use_threads && num_cores > 1 ? "✓ Habilitado" : "✗ Desabilitado") << "\n";
         std::cout << "   Escalonador:  " << config.scheduler << "\n";
         std::cout << "   Quantum:      " << config.quantum << " ciclos\n";
-        std::cout << "   Substituição: " << config.replacement_policy << "\n";
+        std::cout << "   Cache Policy: " << config.replacement_policy << " (" << CACHE_CAPACITY << " blocos)\n";
         std::cout << "   Config Dir:   " << config.config_dir << "\n";
         std::cout << "   Tasks Dir:    " << config.tasks_dir << "\n";
         std::cout << "   Output Dir:   " << config.output_dir << "\n\n";
@@ -1344,11 +1426,13 @@ int main(int argc, char* argv[]) {
         // Decidir entre multi-thread ou sequencial
         if (num_cores > 1 && config.use_threads) {
             metrics = run_multicore_scheduler(num_cores, scheduler_type, config.scheduler, true,
-                                             config.config_dir, config.tasks_dir, config.output_dir);
+                                             config.config_dir, config.tasks_dir, config.output_dir,
+                                             config.replacement_policy);
         } else {
             // Execução sequencial (mesmo com múltiplos cores logicamente)
             metrics = run_scheduler(scheduler_type, config.scheduler, true,
-                                   config.config_dir, config.tasks_dir, config.output_dir);
+                                   config.config_dir, config.tasks_dir, config.output_dir,
+                                   config.replacement_policy);
             metrics.num_cores = num_cores; // Registrar número de cores configurados
         }
         
@@ -1359,9 +1443,20 @@ int main(int argc, char* argv[]) {
         std::cout << "Cache hit rate: " << std::fixed << std::setprecision(2) 
                   << metrics.cache_hit_rate << "%\n\n";
         
+        // Salvar CSV também
+        std::string csv_name;
+        if (num_cores == 1 || !config.use_threads) {
+            csv_name = config.output_dir + "/metrics_single.csv";
+        } else {
+            csv_name = config.output_dir + "/metrics_multi.csv";
+        }
+        std::vector<SchedulerMetrics> metrics_vec = {metrics};
+        save_metrics_csv(metrics_vec, csv_name);
+        std::cout << "Métricas CSV: " << csv_name << "\n";
+        
         std::string mode_suffix = (num_cores > 1 && config.use_threads) ? "_multicore" : "";
         std::string output_file = config.output_dir + "/resultados_" + config.scheduler + mode_suffix + ".dat";
-        std::cout << "Resultados salvos em: " << output_file << "\n";
+        std::cout << "Resultados detalhados: " << output_file << "\n";
         
         return 0;
     }
@@ -1382,12 +1477,21 @@ int main(int argc, char* argv[]) {
             std::cout << "▶ Executando " << name << "..." << std::flush;
             
             SchedulerMetrics result;
-            if (num_cores > 1 && config.use_threads) {
-                result = run_multicore_scheduler(num_cores, type, name, true);
-            } else {
-                result = run_scheduler(type, name, true);
-                result.num_cores = num_cores;
+            
+            // Executar dentro de um escopo isolado para garantir destruição completa
+            {
+                if (num_cores > 1 && config.use_threads) {
+                    result = run_multicore_scheduler(num_cores, type, name, true,
+                                                    "processes", "tasks", "output",
+                                                    config.replacement_policy);
+                } else {
+                    result = run_scheduler(type, name, true,
+                                         "processes", "tasks", "output",
+                                         config.replacement_policy);
+                    result.num_cores = num_cores;
+                }
             }
+            // Forçar coleta de lixo e dar tempo para destrutores
             
             std::cout << " ✓ (" << std::fixed << std::setprecision(2) 
                       << result.execution_time_ms << " ms)\n";
@@ -1395,16 +1499,23 @@ int main(int argc, char* argv[]) {
             return result;
         };
         
-        all_metrics.push_back(run_func(SchedulerType::FCFS, "FCFS"));
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        
-        all_metrics.push_back(run_func(SchedulerType::SJN, "SJN"));
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        
-        all_metrics.push_back(run_func(SchedulerType::Priority, "Priority"));
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        
-        all_metrics.push_back(run_func(SchedulerType::RoundRobin, "RoundRobin"));
+        // Executar cada escalonador com isolamento completo
+        try {
+            all_metrics.push_back(run_func(SchedulerType::FCFS, "FCFS"));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            
+            all_metrics.push_back(run_func(SchedulerType::SJN, "SJN"));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            
+            all_metrics.push_back(run_func(SchedulerType::Priority, "Priority"));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            
+            all_metrics.push_back(run_func(SchedulerType::RoundRobin, "RoundRobin"));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        } catch (const std::exception& e) {
+            std::cerr << "\n❌ Erro durante execução: " << e.what() << "\n";
+            return 1;
+        }
         
         
         print_comparison_table(all_metrics);
@@ -1501,10 +1612,14 @@ int main(int argc, char* argv[]) {
     SchedulerMetrics metrics;
     // Decidir entre multi-thread ou sequencial
     if (num_cores > 1 && config.use_threads) {
-        metrics = run_multicore_scheduler(num_cores, scheduler_type, scheduler_name, true);
+        metrics = run_multicore_scheduler(num_cores, scheduler_type, scheduler_name, true,
+                                        "processes", "tasks", "output",
+                                        config.replacement_policy);
     } else {
         // Execução sequencial (mesmo com múltiplos cores logicamente)
-        metrics = run_scheduler(scheduler_type, scheduler_name, true);
+        metrics = run_scheduler(scheduler_type, scheduler_name, true,
+                              "processes", "tasks", "output",
+                              config.replacement_policy);
         metrics.num_cores = num_cores; // Registrar número de cores configurados
     }
     

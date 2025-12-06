@@ -1,5 +1,7 @@
 # Arquivos compilados e de build
 *.o
+build/
+build/*
 
 # Arquivos do VS Code
 .vscode/

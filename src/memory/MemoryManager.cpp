@@ -9,6 +9,18 @@ MemoryManager::MemoryManager(size_t mainMemorySize, size_t secondaryMemorySize) 
     mainMemoryLimit = mainMemorySize;
 }
 
+MemoryManager::~MemoryManager() {
+    // CRÍTICO: Limpar cache ANTES de destruir as memórias
+    // para evitar write-back em memórias já destruídas
+    if (L1_cache) {
+        L1_cache->invalidate();
+        L1_cache.reset();  // Destruir cache explicitamente
+    }
+    // Agora podemos destruir as memórias com segurança
+    mainMemory.reset();
+    secondaryMemory.reset();
+}
+
 uint32_t MemoryManager::read(uint32_t address, PCB& process) {
     process.mem_accesses_total.fetch_add(1);
     process.mem_reads.fetch_add(1);
@@ -101,4 +113,14 @@ void MemoryManager::simulateContextSwitchLight() {
     // Context switch sem preempção (ex: FCFS puro)
     // Quase não polui a cache, apenas marca algumas entradas como menos recentes
     L1_cache->invalidatePartial(0.1f);  // Invalida apenas 10% da cache
+}
+
+void MemoryManager::setCachePolicy(ReplacementPolicy policy) {
+    if (L1_cache) {
+        L1_cache->setPolicy(policy);
+    }
+}
+
+ReplacementPolicy MemoryManager::getCachePolicy() const {
+    return L1_cache ? L1_cache->getPolicy() : ReplacementPolicy::FIFO;
 }

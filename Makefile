@@ -1,138 +1,149 @@
-# Compilador e flags
-CXX := g++
-CXXFLAGS := -Wall -Wextra -g -std=c++17 -Isrc
+# ============================================================================
+# Makefile - SO-SimuladorVonNeumann
+# Wrapper simplificado para configuração e build do projeto com CMake
+# ============================================================================
+
+# Diretórios
+BUILD_DIR := build
+SCRIPTS_DIR := scripts
 
 # Alvos principais
-TARGET := teste
-TARGET_HASH := test_hash_register
-TARGET_BANK := test_register_bank
+.PHONY: all setup build run clean help test check plots install-deps
 
-# Fontes principais
-SRC := src/teste.cpp src/cpu/ULA.cpp
-OBJ := $(SRC:.cpp=.o)
+# Alvo padrão: configura e compila o projeto
+all: setup build
 
-# Fontes para teste do hash register
-SRC_HASH := src/test_hash_register.cpp
-OBJ_HASH := $(SRC_HASH:.cpp=.o)
+# Alvo padrão: configura e compila o projeto
+all: setup build
 
-# Fontes para teste do register bank
-SRC_BANK := src/test_register_bank.cpp src/cpu/REGISTER_BANK.cpp
-OBJ_BANK := $(SRC_BANK:.cpp=.o)
+# ============================================================================
+# SETUP - Configuração inicial do projeto (cria build/ e executa cmake)
+# ============================================================================
+setup:
+	@echo "🔧 Configurando o projeto..."
+	@if [ ! -d "$(BUILD_DIR)" ]; then \
+		echo "  📁 Criando diretório build/..."; \
+		mkdir -p $(BUILD_DIR); \
+	fi
+	@echo "  ⚙️  Executando cmake..."
+	@cd $(BUILD_DIR) && cmake .. > /dev/null
+	@echo "✅ Configuração concluída!"
 
-# Make clean -> make -> make run
-all: clean $(TARGET) run
+# ============================================================================
+# BUILD - Compila o simulador e testes
+# ============================================================================
+build:
+	@echo "🔨 Compilando o projeto..."
+	@cd $(BUILD_DIR) && $(MAKE) --no-print-directory
+	@echo "✅ Compilação concluída!"
 
-# Regra para o programa principal
-$(TARGET): $(OBJ)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJ)
-
-# Regra para o teste do hash register
-$(TARGET_HASH): $(OBJ_HASH)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJ_HASH)
-
-# Regra para o teste do register bank
-$(TARGET_BANK): $(OBJ_BANK)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJ_BANK)
-
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-clean:
-	@echo "Limpando arquivos antigos..."
-	@rm -f $(OBJ) $(OBJ_HASH) $(TARGET) $(TARGET_HASH) $(TARGET_BANK)
-
-# Limpa apenas os gráficos gerados
-clean-plots:
-	@echo "Limpando gráficos..."
-	@rm -rf plots/*.png
-	@echo "Gráficos removidos (plots/*.png)"
-
-# Limpa apenas os resultados de simulação
-clean-output:
-	@echo "Limpando resultados de simulação..."
-	@rm -rf output/*.dat output/*.txt output/*.csv build/output/*.dat build/output/*.txt build/output/*.csv
-	@echo "Resultados removidos (output/*.dat, output/*.txt, output/*.csv)"
-
-# Limpa tanto plots quanto outputs
-clean-results: clean-plots clean-output
-	@echo "Todos os resultados de simulação foram removidos!"
-
-# Gera análise de desempenho a partir dos CSVs
-analyze:
-	@echo "📊 Gerando análises de desempenho..."
-	@python3 scripts/analyze_performance.py output plots
-	@echo "✅ Análise concluída! Veja os gráficos em plots/"
-
+# ============================================================================
+# RUN - Executa o simulador principal
+# ============================================================================
 run:
-	@echo "Executando o programa..."
-	@./$(TARGET)
+	@if [ ! -f "$(BUILD_DIR)/simulador" ]; then \
+		echo "❌ Simulador não encontrado. Execute 'make' primeiro."; \
+		exit 1; \
+	fi
+	@echo "🚀 Executando o simulador...\n"
+	@cd $(BUILD_DIR) && ./simulador
 
-# Teste específico para hash register
-test-hash: clean $(TARGET_HASH)
-	@echo "Executando teste do Hash Register..."
-	@./$(TARGET_HASH)
+# ============================================================================
+# TEST - Executa todos os testes
+# ============================================================================
+test:
+	@echo "🧪 Executando testes..."
+	@cd $(BUILD_DIR) && $(MAKE) test-all --no-print-directory
 
-# Teste específico para register bank
-test-bank: clean $(TARGET_BANK)
-	@echo "Executando teste do Register Bank..."
-	@./$(TARGET_BANK)
+# ============================================================================
+# CHECK - Verificação rápida dos componentes
+# ============================================================================
+check:
+	@echo "✔️  Verificando componentes..."
+	@cd $(BUILD_DIR) && $(MAKE) check --no-print-directory
 
-# Testa ambos os programas
-test-all: clean $(TARGET) $(TARGET_HASH)
-	@echo "Executando programa principal..."
-	@./$(TARGET)
-	@echo ""
-	@echo "Executando teste do Hash Register..."
-	@./$(TARGET_HASH)
-	@echo ""
-	@echo "Executando teste do Register Bank..."
-	@./$(TARGET_BANK)
+# ============================================================================
+# PLOTS - Gera gráficos de análise de desempenho
+# ============================================================================
+plots:
+	@echo "📊 Gerando gráficos..."
+	@cd $(BUILD_DIR) && $(MAKE) plots --no-print-directory
 
-# Comando de ajuda
+# PLOTS-EXTENDED - Análise estendida com degradação e comparações
+# ============================================================================
+plots-extended:
+	@echo "📊 Gerando análise estendida de desempenho..."
+	@if [ ! -f "$(BUILD_DIR)/output/metrics_single.csv" ] || [ ! -f "$(BUILD_DIR)/output/metrics_multi.csv" ]; then \
+		echo "❌ Arquivos CSV não encontrados."; \
+		echo "   Execute o simulador primeiro:"; \
+		echo "     1. make run  # Digite: 1, n, 5 (single-core)"; \
+		echo "     2. make run  # Digite: 8, y, 5 (multi-core)"; \
+		exit 1; \
+	fi
+	@cd $(BUILD_DIR) && python3 ../scripts/analyze_performance_extended.py output plots
+	@echo "✅ Análise estendida concluída! Veja os gráficos em build/plots/"
+
+# ============================================================================
+# CLEAN - Remove arquivos de build
+# ============================================================================
+clean:
+	@echo "🧹 Limpando arquivos de build..."
+	@rm -rf $(BUILD_DIR)
+	@echo "✅ Limpeza concluída!"
+
+# ============================================================================
+# CLEAN-RESULTS - Remove apenas resultados de simulação
+# ============================================================================
+clean-results:
+	@echo "🧹 Limpando resultados de simulação..."
+	@rm -rf $(BUILD_DIR)/output/*.dat $(BUILD_DIR)/output/*.txt $(BUILD_DIR)/output/*.csv
+	@rm -rf plots/*.png
+	@echo "✅ Resultados removidos!"
+
+# ============================================================================
+# INSTALL-DEPS - Instala dependências do Python para análise
+# ============================================================================
+install-deps:
+	@echo "📦 Instalando dependências Python..."
+	@pip3 install -r $(SCRIPTS_DIR)/requirements.txt
+	@echo "✅ Dependências instaladas!"
+
+# ============================================================================
+# HELP - Mostra comandos disponíveis
+# ============================================================================
 help:
-	@echo "SO-SimuladorVonNeumann - Comandos Disponíveis:"
 	@echo ""
-	@echo "  make / make all    - Compila e executa programa principal"
-	@echo "  make clean         - Remove arquivos gerados (.o, executáveis)"
-	@echo "  make run          - Executa programa principal (sem recompilar)"
-	@echo "  make teste        - Compila apenas o programa principal"
-	@echo "  make test-hash    - Compila e testa sistema de registradores"
-	@echo "  make test-bank    - Compila e testa o banco de registradores"
-	@echo "  make test-all     - Executa todos os testes disponíveis"
-	@echo "  make check        - Verificação rápida de todos os componentes"
-	@echo "  make debug        - Build com símbolos de debug (-g -O0)"
-	@echo "  make help         - Mostra esta mensagem de ajuda"
+	@echo "╔════════════════════════════════════════════════════════════════╗"
+	@echo "║        SO-SimuladorVonNeumann - Comandos Disponíveis          ║"
+	@echo "╚════════════════════════════════════════════════════════════════╝"
 	@echo ""
-	@echo "Limpeza de Resultados:"
-	@echo "  make clean-plots   - Remove todos os gráficos (plots/*.png)"
-	@echo "  make clean-output  - Remove resultados de simulação (*.dat, *.txt, *.csv)"
-	@echo "  make clean-results - Remove plots + outputs (limpeza completa)"
-	@echo "  make analyze       - Gera análises de desempenho (requer CSV gerados)"
+	@echo "📦 CONFIGURAÇÃO E BUILD:"
+	@echo "  make                 - Configura e compila o projeto (setup + build)"
+	@echo "  make setup           - Cria build/ e executa cmake"
+	@echo "  make build           - Compila o simulador e testes"
+	@echo "  make install-deps    - Instala dependências Python (matplotlib, etc.)"
 	@echo ""
-	@echo "Informações do Projeto:"
-	@echo "  Compilador: $(CXX)"
-	@echo "  Flags: $(CXXFLAGS)"
-	@echo "  Arquivos fonte: $(words $(SRC) $(SRC_HASH)) arquivos"
+	@echo "🚀 EXECUÇÃO:"
+	@echo "  make run             - Executa o simulador principal"
+	@echo "  make test            - Executa todos os testes"
+	@echo "  make check           - Verificação rápida (PASSOU/FALHOU)"
+	@echo ""
+	@echo "📊 ANÁLISE:"
+	@echo "  make plots           - Gera gráficos de desempenho"
+	@echo "  make plots-extended  - Análise estendida (degradação, speedup, comparações)"
+	@echo ""
+	@echo "🧹 LIMPEZA:"
+	@echo "  make clean           - Remove diretório build/ completo"
+	@echo "  make clean-results   - Remove apenas resultados (.dat, .csv, .png)"
+	@echo ""
+	@echo "ℹ️  AJUDA:"
+	@echo "  make help            - Mostra esta mensagem"
+	@echo ""
+	@echo "📋 EXEMPLO DE USO RÁPIDO:"
+	@echo "  git clone <repo>"
+	@echo "  cd SO-SimuladorVonNeumann"
+	@echo "  make              # Configura e compila"
+	@echo "  make run          # Executa o simulador"
+	@echo ""
 
-# Verificação rápida de todos os componentes
-check: $(TARGET) $(TARGET_HASH)
-	@echo "Executando verificações rápidas..."
-	@echo -n "  Teste principal: "; ./$(TARGET) >/dev/null 2>&1 && echo "PASSOU" || echo "FALHOU"
-	@echo -n "  Teste hash register: "; ./$(TARGET_HASH) >/dev/null 2>&1 && echo "PASSOU" || echo "FALHOU"
-	@echo -n "  Teste register bank: "; ./$(TARGET_BANK) >/dev/null 2>&1 && echo "PASSOU" || echo "FALHOU"
-	@echo "Verificação concluída!"
-
-# Build com debug symbols
-debug: CXXFLAGS += -DDEBUG -O0 -ggdb3
-debug: clean $(TARGET)
-	@echo "Build de debug criado com símbolos completos"
-	@echo "   Use: gdb ./$(TARGET) para debug"
-
-# Lista arquivos do projeto
-list-files:
-	@echo "Arquivos do projeto:"
-	@echo "  Fontes principais: $(SRC)"
-	@echo "  Fontes de teste: $(SRC_HASH)"
-	@echo "  Headers: $(shell find src -name '*.hpp' 2>/dev/null)"
-
-.PHONY: all clean run test-hash test-all help check debug list-files clean-plots clean-output clean-results analyze
+.DEFAULT_GOAL := all

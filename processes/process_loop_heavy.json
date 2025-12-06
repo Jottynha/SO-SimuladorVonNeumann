@@ -1,6 +1,6 @@
 {
   "pid": 9,
   "name": "Loop-Heavy Process",
-  "quantum": 5,
-  "priority": 2
+  "quantum": 1000,
+  "priority": 1
 }

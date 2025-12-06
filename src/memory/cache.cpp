@@ -14,6 +14,8 @@ Cache::~Cache() {
 }
 
 size_t Cache::get(size_t address) {
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    
     if (cacheMap.count(address) > 0 && cacheMap[address].isValid) {
         cache_hits++;
         
@@ -31,6 +33,8 @@ size_t Cache::get(size_t address) {
 }
 
 void Cache::put(size_t address, size_t data, MemoryManager* memManager) {
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    
     // Se a cache está cheia, precisamos remover um item
     if (cacheMap.size() >= capacity) {
         CachePolicy cachepolicy(policy);
@@ -73,6 +77,8 @@ void Cache::put(size_t address, size_t data, MemoryManager* memManager) {
 }
 
 void Cache::update(size_t address, size_t data) {
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    
     // Se o item não está na cache, primeiro o colocamos lá
     if (cacheMap.find(address) == cacheMap.end()) {
         // Para a simplicidade, assumimos que o `put` deve ser chamado pelo `MemoryManager`
@@ -88,6 +94,8 @@ void Cache::update(size_t address, size_t data) {
 }
 
 void Cache::invalidate() {
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    
     for (auto &c : cacheMap) {
         c.second.isValid = false;
     }
@@ -98,12 +106,20 @@ void Cache::invalidate() {
 }
 
 void Cache::invalidatePartial(float percentage) {
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    
     // Invalida apenas uma porcentagem da cache (cache pollution parcial)
     // Mais realista que invalidar tudo durante context switch
     
     if (percentage <= 0.0f) return;
     if (percentage >= 1.0f) {
-        invalidate();  // Se >= 100%, invalida tudo
+        // Não chama invalidate() para evitar double-lock, faz manualmente
+        for (auto &c : cacheMap) {
+            c.second.isValid = false;
+        }
+        std::queue<size_t> empty_queue;
+        fifo_queue.swap(empty_queue);
+        lru_list.clear();
         return;
     }
     
@@ -137,6 +153,8 @@ void Cache::invalidatePartial(float percentage) {
 }
 
 void Cache::reset() {
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    
     // Limpa completamente a cache (dados + estatísticas)
     cacheMap.clear();
     std::queue<size_t> empty_queue;
@@ -147,6 +165,8 @@ void Cache::reset() {
 }
 
 std::vector<std::pair<size_t, size_t>> Cache::dirtyData() {
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    
     std::vector<std::pair<size_t, size_t>> dirty_data;
     for (const auto &c : cacheMap) {
         if (c.second.isDirty) {
@@ -157,10 +177,12 @@ std::vector<std::pair<size_t, size_t>> Cache::dirtyData() {
 }
 
 int Cache::get_misses(){
-       // Retorna o número de cache misses
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    // Retorna o número de cache misses
     return cache_misses;
 }
 int Cache::get_hits(){
-       // Retorna o número de cache hits
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    // Retorna o número de cache hits
     return cache_hits;
 }
